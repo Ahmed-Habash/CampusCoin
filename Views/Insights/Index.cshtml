@@ -1,0 +1,189 @@
+@model InsightsViewModel
+@{
+    ViewData["Title"] = "Insights";
+    string Money(decimal n) => Currency.Format(n);
+}
+<div class="insights-page">
+    <div class="page-heading insights-heading">
+        <div>
+            <span class="eyebrow">Clarity</span>
+            <h1>Insights</h1>
+            <p>@Model.Month.ToString("MMMM yyyy") — pace, alerts, and goals.</p>
+        </div>
+        <form method="get" class="month-picker insights-month">
+            <label for="month" class="visually-hidden">Month</label>
+            <input id="month" name="month" type="month" value="@Model.Month.ToString("yyyy-MM")" />
+            <button class="button secondary small" type="submit">View</button>
+        </form>
+    </div>
+
+    <section class="insight-metrics">
+        <article class="insight-metric is-dark">
+            <span>Projected spend</span>
+            <strong>@Money(Model.ForecastExpenses)</strong>
+            <small>avg @Money(Model.AverageExpenses)</small>
+        </article>
+        <article class="insight-metric">
+            <span>Forecast balance</span>
+            <strong class="@(Model.ForecastBalance < 0 ? "is-neg" : "")">@Money(Model.ForecastBalance)</strong>
+            <small>income − projected</small>
+        </article>
+        <article class="insight-metric">
+            <span>Savings rate</span>
+            <strong>@Model.SavingsRate.ToString("0.#")%</strong>
+            <small>left after expenses</small>
+        </article>
+        <article class="insight-metric">
+            <span>Check-in streak</span>
+            <strong>@Model.CheckInStreak <em>d</em></strong>
+            <small>@(Model.Badges.Count > 0 ? Model.Badges[0] : "Log to earn badges")</small>
+        </article>
+    </section>
+
+    <section class="insight-main">
+        <article class="panel pulse-panel @(Model.HasPulseData ? "" : "is-empty")">
+            <div class="panel-heading">
+                <div>
+                    <h2>Spending pulse</h2>
+                    <p>Daily expenses · last 14 days</p>
+                </div>
+                @if (Model.HasPulseData)
+                {
+                    <div class="pulse-heading-meta">
+                        <span><b>@Money(Model.PulseTotal)</b> total</span>
+                        @if (!string.IsNullOrEmpty(Model.PulsePeakLabel))
+                        {
+                            <span>Peak @Model.PulsePeakLabel</span>
+                        }
+                    </div>
+                }
+            </div>
+            @if (Model.HasPulseData)
+            {
+                <div class="chart-wrap pulse-chart-wrap">
+                    <canvas id="pulse-chart" aria-label="Recent spending pulse" role="img"></canvas>
+                </div>
+            }
+            else
+            {
+                <div class="pulse-empty">
+                    <strong>No expenses in the last 14 days</strong>
+                    <p>Add a few purchases and your daily spend chart will appear here.</p>
+                    <a class="button secondary small" asp-controller="Transactions" asp-action="Edit">Add expense</a>
+                </div>
+            }
+        </article>
+
+        <article class="panel">
+            <div class="panel-heading">
+                <div><h2>Alerts</h2><p>Budgets and spending pace</p></div>
+            </div>
+            <div class="alert-list">
+                @foreach (var alert in Model.Alerts)
+                {
+                    <div class="insight-alert @alert.Tone">
+                        <span class="alert-mark">@(alert.Tone == "danger" ? "!" : alert.Tone == "warning" ? "~" : "✓")</span>
+                        <div>
+                            <strong>@alert.Title</strong>
+                            <p>@alert.Detail</p>
+                        </div>
+                    </div>
+                }
+            </div>
+        </article>
+    </section>
+
+    <section class="insight-secondary">
+        <article class="panel what-if-card"
+                 data-forecast-balance="@Model.ForecastBalance.ToString(CultureInfo.InvariantCulture)"
+                 data-goal-remaining="@(Model.Goals.FirstOrDefault()?.Remaining.ToString(CultureInfo.InvariantCulture) ?? "0")"
+                 data-currency="@Currency.Code">
+            <div class="panel-heading">
+                <div><h2>What-if</h2><p>Preview a purchase — nothing is saved</p></div>
+            </div>
+            <div class="what-if-body">
+                <div class="what-if-control">
+                    <label for="what-if-amount">Amount</label>
+                    <div class="money-input"><span>@Currency.Symbol</span><input id="what-if-amount" type="number" min="0" step="0.01" value="0" /></div>
+                    <div class="what-if-presets">
+                        <button type="button" data-what-if="10">@Currency.Format(10m)</button>
+                        <button type="button" data-what-if="25">@Currency.Format(25m)</button>
+                        <button type="button" data-what-if="50">@Currency.Format(50m)</button>
+                        <button type="button" data-what-if="100">@Currency.Format(100m)</button>
+                    </div>
+                </div>
+                <div class="what-if-preview">
+                    <span class="tiny-label">Balance after</span>
+                    <strong id="what-if-balance">@Money(Model.ForecastBalance)</strong>
+                    <div class="what-if-line"><span id="what-if-marker"></span></div>
+                    <p id="what-if-message">Your current forecast is ready.</p>
+                </div>
+            </div>
+        </article>
+
+        <article class="panel goals-panel">
+            <div class="panel-heading">
+                <div><h2>Savings goals</h2><p>Name a target and track it</p></div>
+            </div>
+            <form method="post" asp-action="CreateGoal" class="goal-form">
+                <div>
+                    <label for="goal-name">Goal</label>
+                    <input id="goal-name" name="Name" maxlength="80" placeholder="Laptop, emergency fund…" required />
+                </div>
+                <div>
+                    <label for="goal-target">Target</label>
+                    <input id="goal-target" name="Target" type="number" min="0.01" step="0.01" placeholder="500" required />
+                </div>
+                <div>
+                    <label for="goal-deadline">Deadline</label>
+                    <input id="goal-deadline" name="Deadline" type="date" />
+                </div>
+                <button class="button" type="submit">Add</button>
+            </form>
+            @if (Model.Goals.Count == 0)
+            {
+                <p class="goals-empty muted">No goals yet — add one above.</p>
+            }
+            else
+            {
+                <div class="goal-list">
+                    @foreach (var goal in Model.Goals)
+                    {
+                        <div class="goal-row">
+                            <div class="goal-row-head">
+                                <strong>@goal.Name</strong>
+                                <span>@Money(goal.Saved) / @Money(goal.Target)</span>
+                            </div>
+                            <progress value="@goal.Percent" max="100" aria-label="@goal.Name progress"></progress>
+                            <div class="goal-row-foot">
+                                <small>@(goal.Deadline.HasValue ? $"Due {goal.Deadline:dd MMM yyyy}" : "No deadline") · @goal.Percent.ToString("0")%</small>
+                                <span>
+                                    <form method="post" asp-action="AddToGoal" class="inline-goal">
+                                        <input type="hidden" name="id" value="@goal.Id" />
+                                        <input name="amount" type="number" min="0.01" step="0.01" placeholder="Add" aria-label="Add to @goal.Name" />
+                                        <button class="text-button goal-add-btn" type="submit" aria-label="Add to goal">＋</button>
+                                    </form>
+                                    <form method="post" asp-action="DeleteGoal">
+                                        <input type="hidden" name="id" value="@goal.Id" />
+                                        <button class="text-button danger-link" type="submit">Remove</button>
+                                    </form>
+                                </span>
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+        </article>
+    </section>
+</div>
+
+@section Scripts {
+    <script src="~/lib/chart.umd.min.js"></script>
+    <script id="pulse-data" type="application/json">@Html.Raw(System.Text.Json.JsonSerializer.Serialize(new {
+        labels = Model.HeatmapLabels,
+        values = Model.HeatmapValues,
+        currency = Currency.Code,
+        hasData = Model.HasPulseData
+    }))</script>
+    <script src="~/js/insights.js" asp-append-version="true"></script>
+}

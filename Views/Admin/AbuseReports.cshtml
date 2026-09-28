@@ -1,0 +1,65 @@
+@model List<GroupAbuseReport>
+@{
+    ViewData["Title"] = "Abuse Reports";
+    ViewData["HeaderEyebrow"] = "Group safety";
+    ViewData["HeaderTitle"] = "Abuse reports";
+    ViewData["HeaderLead"] = "Review student reports on roommate and friend groups.";
+    ViewData["HeaderSecondaryText"] = "← Groups";
+    ViewData["HeaderSecondaryController"] = "Admin";
+    ViewData["HeaderSecondaryAction"] = "Groups";
+}
+<partial name="_PageHeader" />
+
+<section class="panel">
+    <div class="panel-heading">
+        <div>
+            <h2>Reported groups</h2>
+            <p>Pending reports need a dismiss or disable action.</p>
+        </div>
+        <span class="pill">@Model.Count total</span>
+    </div>
+
+    @if (Model.Count == 0)
+    {
+        ViewData["EmptyTitle"] = "No abuse reports.";
+        ViewData["EmptyBody"] = "When students report a group, it will show up here for review.";
+        <partial name="_EmptyState" />
+    }
+    else
+    {
+        <div class="admin-report-list">
+            @foreach (var report in Model)
+            {
+                var pending = string.Equals(report.Status, "Pending", StringComparison.OrdinalIgnoreCase);
+                <article class="admin-report-row">
+                    <div class="admin-report-main">
+                        <div class="admin-report-top">
+                            <strong>@(report.Group?.Name ?? $"Group #{report.GroupId}")</strong>
+                            <span class="status-chip @(pending ? "is-warn" : "is-ok")">@report.Status</span>
+                        </div>
+                        <p>@report.Reason</p>
+                        <small class="muted">
+                            Reported by @(report.ReportedByUser?.Email ?? report.ReportedByUserId)
+                            · @report.ReportedAt.ToLocalTime().ToString("MMM d, yyyy h:mm tt")
+                        </small>
+                    </div>
+                    @if (pending)
+                    {
+                        <div class="admin-report-actions">
+                            <form method="post" asp-action="ResolveAbuseReport" asp-route-id="@report.Id">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="actionTaken" value="dismiss" />
+                                <button class="button secondary small" type="submit">Dismiss</button>
+                            </form>
+                            <form method="post" asp-action="ResolveAbuseReport" asp-route-id="@report.Id" data-confirm="Disable this group and resolve the report?">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="actionTaken" value="disable" />
+                                <button class="button small" type="submit">Disable group</button>
+                            </form>
+                        </div>
+                    }
+                </article>
+            }
+        </div>
+    }
+</section>

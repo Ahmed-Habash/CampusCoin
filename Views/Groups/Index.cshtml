@@ -1,0 +1,140 @@
+@inject CampusCoin.Services.CurrencyService Currency
+@model CampusCoin.ViewModels.GroupListViewModel
+@{
+    ViewData["Title"] = "Roommate & Friend Groups";
+}
+
+<div class="page-heading" style="margin-bottom: 28px;">
+    <div>
+        <span class="eyebrow" style="letter-spacing:1.5px;color:var(--signal);">STUDENT SHARED EXPENSES</span>
+        <h1 style="font-size:32px;font-weight:800;margin:6px 0 4px;letter-spacing:-1px;">Roommate &amp; Friend Groups</h1>
+        <p style="color:var(--muted);font-size:13px;margin:0;">Split rent, canteen meals, and project snacks effortlessly with automatic balance calculations.</p>
+    </div>
+    <div style="display:flex;gap:12px;align-items:center;">
+        <button class="button" onclick="document.getElementById('createGroupModal').style.display='flex'">＋ Create New Group</button>
+        @if (Model.SystemSettings.AllowCodeInvites)
+        {
+            <button class="button secondary" onclick="document.getElementById('joinGroupModal').style.display='flex'">🔑 Join via Code</button>
+        }
+    </div>
+</div>
+
+@if (!Model.SystemSettings.GroupsFeatureEnabled)
+{
+    <div class="notice error" style="margin-bottom:24px;border:1px solid rgba(239,68,68,0.3);background:rgba(239,68,68,0.1);">
+        <strong>⚠️ Feature Paused:</strong> Roommate / Friend Groups are currently paused globally by system administrator settings.
+    </div>
+}
+
+<div style="display:grid;grid-template-columns:repeat(auto-fill, minmax(340px, 1fr));gap:24px;">
+    @if (!Model.Groups.Any())
+    {
+        <div class="panel empty-state" style="grid-column: 1 / -1; padding: 60px 24px; text-align: center;">
+            <div style="font-size: 56px; margin-bottom: 16px; line-height: 1;">🧑‍🤝‍🧑</div>
+            <h2 style="font-size: 22px; font-weight: 700; margin-bottom: 8px;">No Active Groups Yet</h2>
+            <p style="color: var(--muted); max-width: 480px; margin: 0 auto 24px; font-size: 13px; line-height: 1.6;">
+                Create a private group (max @Model.SystemSettings.MaxGroupSize members) for your apartment, lab team, or hostel mates to split shared costs with zero awkwardness.
+            </p>
+            <button class="button" onclick="document.getElementById('createGroupModal').style.display='flex'">Create Your First Group ↗</button>
+        </div>
+    }
+    else
+    {
+        @foreach (var item in Model.Groups)
+        {
+            <div class="panel @(item.IsDisabled ? "disabled-card" : "")" style="display:flex;flex-direction:column;justify-content:space-between;border:1px solid var(--line);border-radius:16px;padding:24px;position:relative;background:var(--panel);box-shadow:var(--shadow);transition:transform .2s ease, border-color .2s ease;">
+                <div>
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+                        <span class="pill" style="font-weight:700;letter-spacing:0.5px;">👥 @item.MemberCount / @item.MaxMembers MEMBERS</span>
+                        @if (item.IsDisabled)
+                        {
+                            <span class="notice error" style="padding:3px 8px;margin:0;font-size:10px;font-weight:700;">Disabled</span>
+                        }
+                        else
+                        {
+                            <span class="pill" style="background:rgba(121,242,199,0.15);color:var(--signal);font-weight:700;padding:4px 10px;">Active</span>
+                        }
+                    </div>
+
+                    <h2 style="font-size:22px;font-weight:800;margin-bottom:6px;letter-spacing:-0.5px;color:var(--ink);">@item.Name</h2>
+                    <p style="font-size:12px;color:var(--muted);margin-bottom:20px;">
+                        Created by <strong>@item.CreatorName</strong> · Code: <code style="background:var(--soft);padding:3px 8px;border-radius:6px;font-family:monospace;font-weight:700;letter-spacing:1px;color:var(--ink);">@item.InviteCode</code>
+                    </p>
+
+                    <div style="background:var(--soft);border-radius:12px;padding:16px;margin-bottom:20px;display:flex;flex-direction:column;gap:10px;">
+                        <div style="display:flex;justify-content:space-between;font-size:13px;">
+                            <span style="color:var(--muted);">Total Shared Bills</span>
+                            <strong style="font-size:14px;color:var(--ink);">@Currency.Format(item.TotalSharedExpensesCents)</strong>
+                        </div>
+                        <div style="display:flex;justify-content:space-between;font-size:13px;align-items:center;padding-top:8px;border-top:1px solid var(--line);">
+                            <span style="color:var(--muted);">Your Net Balance</span>
+                            @if (item.UserNetBalanceCents > 0)
+                            {
+                                <strong style="color:#10b981;font-weight:700;">+ You are owed @Currency.Format(item.UserNetBalanceCents)</strong>
+                            }
+                            else if (item.UserNetBalanceCents < 0)
+                            {
+                                <strong style="color:#ef4444;font-weight:700;">- You owe @Currency.Format(Math.Abs(item.UserNetBalanceCents))</strong>
+                            }
+                            else
+                            {
+                                <strong style="color:var(--muted);font-weight:600;">Settled up (@Currency.Format(0m))</strong>
+                            }
+                        </div>
+                    </div>
+                </div>
+
+                <div style="display:flex;justify-content:space-between;align-items:center;padding-top:14px;border-top:1px solid var(--line);gap:10px;">
+                    <small style="color:var(--muted);font-size:11px;">Active @item.LastActivityAt.ToString("MMM dd")</small>
+                    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:flex-end;">
+                        @{
+                            var leaveWarn = item.MemberCount <= 1
+                                ? "You are the last member. Leaving will permanently delete this group and its shared expenses. Continue?"
+                                : "Leave this group? You will no longer see its bills or chat.";
+                        }
+                        <form asp-action="Leave" asp-route-id="@item.Id" method="post" style="display:inline;" onsubmit="return confirm('@leaveWarn');">
+                            <button type="submit" class="button secondary small" style="border-color:#ba4b43;color:#ba4b43;">Leave</button>
+                        </form>
+                        <a asp-action="Details" asp-route-id="@item.Id" class="button secondary small">Open Group ↗</a>
+                    </div>
+                </div>
+            </div>
+        }
+    }
+</div>
+
+<!-- Create Group Modal -->
+<div id="createGroupModal" class="permission-modal-backdrop" style="display:none;" onclick="if(event.target===this)this.style.display='none'">
+    <div class="permission-modal-card panel" style="width:100%;max-width:460px;padding:28px;border-radius:18px;">
+        <h3 style="font-size:20px;font-weight:800;margin-bottom:6px;">🧑‍🤝‍🧑 Create New Roommate Group</h3>
+        <p style="font-size:12px;color:var(--muted);margin-bottom:20px;">Set up a private group for up to @Model.SystemSettings.MaxGroupSize friends or roommates.</p>
+        <form asp-action="Create" method="post">
+            <div class="form-group" style="margin-bottom:20px;">
+                <label style="font-weight:600;font-size:12px;margin-bottom:6px;">Group Name</label>
+                <input type="text" name="Name" class="form-control" placeholder="e.g. Apartment 3B, CS Project Team" required maxlength="80" />
+            </div>
+            <div style="display:flex;justify-content:flex-end;gap:10px;">
+                <button type="button" class="button secondary" onclick="document.getElementById('createGroupModal').style.display='none'">Cancel</button>
+                <button type="submit" class="button">Create Group</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Join Group Modal -->
+<div id="joinGroupModal" class="permission-modal-backdrop" style="display:none;" onclick="if(event.target===this)this.style.display='none'">
+    <div class="permission-modal-card panel" style="width:100%;max-width:460px;padding:28px;border-radius:18px;">
+        <h3 style="font-size:20px;font-weight:800;margin-bottom:6px;">🔑 Join Group via Invite Code</h3>
+        <p style="font-size:12px;color:var(--muted);margin-bottom:20px;">Enter the 8-character invite code provided by your group creator.</p>
+        <form asp-action="Join" method="post">
+            <div class="form-group" style="margin-bottom:20px;">
+                <label style="font-weight:600;font-size:12px;margin-bottom:6px;">Invite Code</label>
+                <input type="text" name="InviteCode" class="form-control" placeholder="e.g. A1B2C3D4" required style="text-transform:uppercase;letter-spacing:2px;font-weight:700;" />
+            </div>
+            <div style="display:flex;justify-content:flex-end;gap:10px;">
+                <button type="button" class="button secondary" onclick="document.getElementById('joinGroupModal').style.display='none'">Cancel</button>
+                <button type="submit" class="button">Join Group</button>
+            </div>
+        </form>
+    </div>
+</div>

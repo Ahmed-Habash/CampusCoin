@@ -1,0 +1,98 @@
+@model List<TipTemplate>
+@{
+    ViewData["Title"] = "Saving-Tip Templates";
+}
+
+<div class="page-heading">
+    <div>
+        <span class="eyebrow">FINANCIAL WISDOM</span>
+        <h1>Tip Templates</h1>
+        <p>Manage system-wide saving-tip templates displayed on student financial dashboards.</p>
+    </div>
+</div>
+
+<div class="panel" style="margin-bottom: 24px;">
+    <h3>Create Saving-Tip Template</h3>
+    <form method="post" asp-controller="Admin" asp-action="CreateTipTemplate" style="display: grid; gap: 14px; margin-top: 14px;">
+        @Html.AntiForgeryToken()
+        <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 12px;">
+            <div>
+                <label for="Title" style="margin-top:0;">Tip Title</label>
+                <input type="text" id="Title" name="Title" placeholder="e.g. Reduce Food Delivery, Track Subscriptions..." required />
+            </div>
+            <div>
+                <label for="Category" style="margin-top:0;">Category</label>
+                <input type="text" id="Category" name="Category" value="General" placeholder="Food, Transport..." required />
+            </div>
+        </div>
+        <div>
+            <label for="Tip" style="margin-top:0;">Tip Advice Content</label>
+            <textarea id="Tip" name="Tip" rows="3" placeholder="Write actionable saving advice..." style="width:100%; border-radius:10px; border:1px solid var(--line); padding:10px; background:var(--panel); color:var(--ink);" required></textarea>
+        </div>
+        <div style="display: flex; align-items: center; justify-content: space-between;">
+            <label class="checkbox" style="margin:0;">
+                <input type="checkbox" name="IsActive" value="true" checked /> Set as Active Template
+            </label>
+            <button type="submit" class="button">Create Tip Template</button>
+        </div>
+    </form>
+</div>
+
+<div class="panel">
+    <h2>System Tip Library</h2>
+    @if (Model.Count == 0)
+    {
+        <p class="muted">No saving-tip templates created yet.</p>
+    }
+    else
+    {
+        <div style="display: grid; gap: 14px; margin-top: 16px;">
+            @foreach (var t in Model)
+            {
+                <div data-ajax-item style="padding: 16px; border: 1px solid var(--line); border-radius: 14px; background: var(--panel); display: flex; justify-content: space-between; align-items: flex-start;">
+                    <div>
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <strong style="font-size: 16px;">@t.Title</strong>
+                            <span class="pill">@t.Category</span>
+                            <span class="pill" data-tip-status style="background: @(t.IsActive ? "var(--signal)" : "var(--soft)"); color: @(t.IsActive ? "#08111f" : "var(--muted)");">
+                                @(t.IsActive ? "Active" : "Inactive")
+                            </span>
+                        </div>
+                        <p style="margin: 8px 0 4px; font-size: 13px; color: var(--muted);">@t.Tip</p>
+                    </div>
+                    <div style="display: flex; gap: 8px;">
+                        <form method="post" asp-controller="Admin" asp-action="ToggleTipTemplate" asp-route-id="@t.Id" data-admin-ajax>
+                            @Html.AntiForgeryToken()
+                            <button type="submit" class="button small secondary" data-tip-toggle>@(t.IsActive ? "Deactivate" : "Activate")</button>
+                        </form>
+                        <form method="post" asp-controller="Admin" asp-action="DeleteTipTemplate" asp-route-id="@t.Id" data-admin-ajax data-ajax-remove data-confirm="Delete tip '@t.Title'?">
+                            @Html.AntiForgeryToken()
+                            <button type="submit" class="button small secondary" style="border-color: #ba4b43; color: #ba4b43;">Delete</button>
+                        </form>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</div>
+
+@section Scripts {
+<script>
+document.addEventListener('admin:ajax-success', (e) => {
+    const form = e.target;
+    if (!(form instanceof HTMLFormElement)) return;
+    const active = e.detail?.data?.active;
+    if (typeof active !== 'boolean') return;
+    const item = form.closest('[data-ajax-item]');
+    if (!item) return;
+    const status = item.querySelector('[data-tip-status]');
+    const toggle = item.querySelector('[data-tip-toggle]');
+    if (status) {
+        status.textContent = active ? 'Active' : 'Inactive';
+        status.style.background = active ? 'var(--signal)' : 'var(--soft)';
+        status.style.color = active ? '#08111f' : 'var(--muted)';
+    }
+    if (toggle) toggle.textContent = active ? 'Deactivate' : 'Activate';
+});
+</script>
+}

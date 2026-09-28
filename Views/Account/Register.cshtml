@@ -1,0 +1,86 @@
+@model RegisterForm
+@{
+    ViewData["Title"] = "Create account";
+}
+<link rel="stylesheet" href="~/css/auth.css" asp-append-version="true" />
+
+<div class="auth-stage" data-auth-stage>
+    <div class="auth-bg" aria-hidden="true">
+        <span class="auth-wash"></span>
+        <span class="auth-aurora"></span>
+        <span class="auth-grid"></span>
+        <span class="auth-orb auth-orb-a"></span>
+        <span class="auth-orb auth-orb-b"></span>
+    </div>
+
+    <div class="auth-shell is-register">
+        <section class="auth-brand" aria-label="Campus Coin">
+            <div class="auth-brand-inner">
+                <div class="auth-wordmark" aria-hidden="true">
+                    <span class="brand-icon">c</span>
+                    <span>campus<span class="brand-light">coin</span></span>
+                </div>
+                <p class="auth-kicker">Built for student life</p>
+                <h1 class="auth-headline">
+                    <span class="auth-line"><span>Start clear.</span></span>
+                    <span class="auth-line auth-line-soft"><span>Stay in control.</span></span>
+                </h1>
+                <p class="auth-lede">One calm place for allowance, part-time income, everyday spending, and the goals you’re working toward.</p>
+                <ul class="auth-points">
+                    <li>No bank connection required</li>
+                    <li>Free for students — export anytime</li>
+                    <li>Private to your account</li>
+                </ul>
+            </div>
+            <div class="auth-figure" aria-hidden="true">
+                <div class="auth-device auth-device-tall">
+                    <div class="auth-device-chrome"><em>Goals</em></div>
+                    <div class="auth-device-body">
+                        <small>Laptop fund</small>
+                        <strong>42<span>%</span></strong>
+                        <i><b style="width:42%"></b></i>
+                        <div class="auth-device-row"><span>Saved</span><em>$210</em></div>
+                        <div class="auth-device-row"><span>Target</span><em>$500</em></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="auth-panel" aria-labelledby="auth-form-title">
+            <header class="auth-panel-head">
+                <span class="eyebrow">CREATE ACCOUNT</span>
+                <h2 id="auth-form-title">Join Campus Coin</h2>
+                <p>Takes a minute. You can refine details later.</p>
+            </header>
+
+            <form method="post" class="auth-form" novalidate>
+                <div asp-validation-summary="All" class="validation" role="alert"></div>
+
+                <div class="auth-field">
+                    <label asp-for="FullName">Full name</label>
+                    <input asp-for="FullName" autocomplete="name" placeholder="Alex Rivera" autofocus />
+                </div>
+
+                <div class="auth-field">
+                    <label asp-for="Email">Email</label>
+                    <input asp-for="Email" autocomplete="email" inputmode="email" placeholder="you@university.edu" />
+                </div>
+
+                <div class="auth-field">
+                    <label asp-for="Password">Password</label>
+                    <partial name="_PasswordField" model='@("Password")' />
+                    <small class="field-help" id="password-help">At least 8 characters, with uppercase, lowercase, a number, and a symbol.</small>
+                </div>
+
+                <div class="auth-field">
+                    <label asp-for="ConfirmPassword">Confirm password</label>
+                    <partial name="_PasswordField" model='@("ConfirmPassword")' />
+                </div>
+
+                <button class="button full auth-submit" type="submit">Create my account</button>
+            </form>
+
+            <p class="auth-switch">Already have an account? <a asp-action="Login">Log in</a></p>
+        </section>
+    </div>
+</div>

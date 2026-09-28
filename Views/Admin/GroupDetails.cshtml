@@ -1,0 +1,286 @@
+@model CampusCoin.ViewModels.AdminGroupDetailsViewModel
+@{
+    ViewData["Title"] = $"Inspect Group: {Model.Group.Name}";
+    var totalGroupSpentCents = Model.Expenses.Sum(e => e.AmountCents);
+}
+
+<a class="back-link" asp-controller="Admin" asp-action="Groups" style="display: inline-block; margin-bottom: 16px;">← Back to Group Management</a>
+
+<!-- Hero Header Card -->
+<div class="panel settings-card" style="margin-bottom: 24px; padding: 28px; border-radius: 20px;">
+    <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 20px;">
+        <div style="display: flex; align-items: flex-start; gap: 16px;">
+            <div style="width: 52px; height: 52px; border-radius: 16px; background: var(--signal); color: #08111f; display: grid; place-items: center; font-size: 24px; font-weight: 800; flex-shrink: 0;">
+                🧑‍🤝‍🧑
+            </div>
+            <div>
+                <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
+                    <h1 style="margin: 0; font-size: 28px; font-weight: 800; letter-spacing: -1px;">Group Oversight: @Model.Group.Name</h1>
+                    @if (Model.Group.IsDisabled)
+                    {
+                        <span class="pill danger" style="background: rgba(186, 75, 67, 0.15); color: #ba4b43; font-weight: 700; padding: 6px 12px; font-size: 11px;">Soft Disabled</span>
+                    }
+                    else
+                    {
+                        <span class="pill success" style="background: rgba(121, 242, 199, 0.22); color: #08111f; font-weight: 700; padding: 6px 12px; font-size: 11px;">Active Group</span>
+                    }
+                </div>
+                <p class="field-help" style="margin-top: 8px; font-size: 13px; color: var(--muted);">
+                    Invite Code: <code style="background: var(--soft); padding: 3px 10px; border-radius: 8px; font-weight: 700; color: var(--signal); font-size: 13px;">@Model.Group.InviteCode</code> · Creator: <strong>@Model.Group.Creator.FullName</strong> (@Model.Group.Creator.Email) · Created @Model.Group.CreatedAt.ToString("MMM dd, yyyy")
+                </p>
+
+                <!-- Quick Stats Badges -->
+                <div style="display: flex; gap: 12px; margin-top: 14px; flex-wrap: wrap;">
+                    <div style="padding: 8px 14px; background: var(--soft); border-radius: 10px; font-size: 12px;">
+                        <span style="color: var(--muted);">Members:</span> <strong style="color: var(--ink);">@Model.Group.Members.Count</strong>
+                    </div>
+                    <div style="padding: 8px 14px; background: var(--soft); border-radius: 10px; font-size: 12px;">
+                        <span style="color: var(--muted);">Logged Expenses:</span> <strong style="color: var(--ink);">@Model.Expenses.Count</strong>
+                    </div>
+                    <div style="padding: 8px 14px; background: var(--soft); border-radius: 10px; font-size: 12px;">
+                        <span style="color: var(--muted);">Total Volume:</span> <strong style="color: var(--signal);">@Currency.Format(totalGroupSpentCents)</strong>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+            <form asp-action="ToggleDisableGroup" asp-route-id="@Model.Group.Id" method="post" data-admin-ajax data-ajax-silent style="display:inline;">
+                @Html.AntiForgeryToken()
+                <button type="submit" class="button @(Model.Group.IsDisabled ? "success" : "secondary") small" style="min-height: 38px; font-weight: 700;" data-group-toggle>
+                    @(Model.Group.IsDisabled ? "Enable Group" : "Soft Disable Group")
+                </button>
+            </form>
+            <form asp-action="ForceResetBalances" asp-route-id="@Model.Group.Id" method="post" style="display:inline;" data-admin-ajax data-ajax-reload data-ajax-silent data-confirm-title="Reset balances?" data-confirm-message="Force-reset all shared expense balances for this group to zero?" data-confirm-label="Reset">
+                @Html.AntiForgeryToken()
+                <button type="submit" class="button secondary small" style="min-height: 38px; border-color: #eab308; color: #eab308; font-weight: 700;">Force Reset Balances</button>
+            </form>
+            <form asp-action="DeleteGroup" asp-route-id="@Model.Group.Id" method="post" style="display:inline;" data-admin-ajax data-ajax-reload data-ajax-silent data-confirm-title="Delete group?" data-confirm-message="Permanently delete this group and all shared expenses?" data-confirm-label="Delete">
+                @Html.AntiForgeryToken()
+                <button type="submit" class="button danger small" style="min-height: 38px; font-weight: 700;">Hard Delete Group</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="lower-grid" style="grid-template-columns: 1fr 2fr; gap: 24px; margin-bottom: 32px;">
+    <!-- Members List & Removal -->
+    <div class="panel" style="border-radius: 18px;">
+        <div class="panel-heading" style="margin-bottom: 20px;">
+            <h2 style="font-size: 17px; font-weight: 750;">👥 Group Members</h2>
+            <span class="pill" style="background: var(--signal); color: #08111f; font-weight: 700;">@Model.Group.Members.Count total</span>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 12px;">
+            @foreach (var m in Model.MemberBalances)
+            {
+                <div class="group-member-card">
+                    <div class="group-member-main">
+                        <span class="avatar group-member-avatar">
+                            @(string.IsNullOrEmpty(m.FullName) ? "U" : m.FullName.Substring(0, 1).ToUpper())
+                        </span>
+                        <div class="group-member-copy">
+                            <strong>@m.FullName</strong>
+                            <small>@m.Email</small>
+                            <span class="group-member-balance">Net Balance: <strong>@Currency.FormatForUser(m.UserId, m.NetBalanceCents)</strong></span>
+                        </div>
+                    </div>
+                    <div class="group-member-actions">
+                        <form asp-action="RemoveGroupMember" asp-route-groupId="@Model.Group.Id" asp-route-userId="@m.UserId" method="post" data-admin-ajax data-ajax-remove data-ajax-silent data-confirm-title="Remove member?" data-confirm-message="Remove @m.FullName from this group?" data-confirm-label="Remove">
+                            @Html.AntiForgeryToken()
+                            <button type="submit" class="button secondary small" style="border-color: #ba4b43; color: #ba4b43; padding: 5px 12px; font-size: 11px; font-weight: 700;">Remove</button>
+                        </form>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+
+    <!-- Expenses Oversight Table -->
+    <div class="panel" style="border-radius: 18px;">
+        <div class="panel-heading" style="margin-bottom: 20px;">
+            <h2 style="font-size: 17px; font-weight: 750;">🧾 Group Shared Expenses</h2>
+            <span class="pill">@Model.Expenses.Count records</span>
+        </div>
+        @if (!Model.Expenses.Any())
+        {
+            <div class="empty-state" style="padding: 42px 20px;">
+                <span style="font-size: 36px; opacity: 0.7;">🧾</span>
+                <h3 style="margin-top: 12px; font-size: 16px;">No shared expenses logged</h3>
+                <p style="font-size: 12px; color: var(--muted); margin-bottom: 0;">No shared expense transactions have been logged in this group yet.</p>
+            </div>
+        }
+        else
+        {
+            <div class="table-scroll">
+                <table class="table" style="width: 100%;">
+                    <thead>
+                        <tr>
+                            <th>Description</th>
+                            <th>Paid By</th>
+                            <th>Amount</th>
+                            <th>Category</th>
+                            <th>Status</th>
+                            <th style="text-align: right;">Admin Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var exp in Model.Expenses)
+                        {
+                            <tr>
+                                <td>
+                                    <strong style="font-size: 13px; color: var(--ink);">@exp.Title</strong>
+                                    <small class="date-cell" style="display: block; margin-top: 2px;">@exp.CreatedAt.ToString("MMM dd, HH:mm")</small>
+                                </td>
+                                <td><span style="font-size: 12px; color: var(--muted);">@exp.PayerEmail</span></td>
+                                <td><strong style="font-size: 13px; color: var(--ink);">@Currency.FormatForUser(exp.PayerUserId, exp.AmountCents)</strong></td>
+                                <td>
+                                    <span class="pill">@exp.Category</span>
+                                    @if (!string.IsNullOrEmpty(exp.Tag)) { <span class="pill accent">@exp.Tag</span> }
+                                </td>
+                                <td>
+                                    @if (exp.IsFlagged) { <span class="pill danger" style="background: rgba(186, 75, 67, 0.15); color: #ba4b43; font-weight: 700;">Flagged</span> }
+                                    @if (exp.IsHiddenFromPulse) { <span class="pill" style="opacity: 0.8;">Pulse Hidden</span> }
+                                </td>
+                                <td style="text-align: right;">
+                                    <div style="display: flex; gap: 6px; justify-content: flex-end;">
+                                        <form asp-action="ToggleFlagSharedExpense" asp-route-id="@exp.Id" asp-route-returnUrl="@Context.Request.Path" method="post">
+                                            <button type="submit" class="button secondary small">@(exp.IsFlagged ? "Unflag" : "Flag")</button>
+                                        </form>
+                                        <form asp-action="TogglePulseHideSharedExpense" asp-route-id="@exp.Id" asp-route-returnUrl="@Context.Request.Path" method="post">
+                                            <button type="submit" class="button secondary small">@(exp.IsHiddenFromPulse ? "Unhide Pulse" : "Hide Pulse")</button>
+                                        </form>
+                                        <form asp-action="DeleteSharedExpense" asp-route-id="@exp.Id" asp-route-returnUrl="@Context.Request.Path" method="post" data-confirm="Delete this expense?">
+                                            <button type="submit" class="button danger small">Delete</button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </div>
+</div>
+
+<!-- Admin Group Chat -->
+<div class="panel" style="border-radius: 18px; margin-bottom: 32px; padding: 22px;">
+    <div class="panel-heading" style="margin-bottom: 14px;">
+        <div>
+            <h2 style="font-size: 17px; font-weight: 750; margin: 0;">💬 Group Chat</h2>
+            <p style="font-size: 12px; color: var(--muted); margin: 4px 0 0;">Administrators can post in any group. Admin messages are highlighted for students.</p>
+        </div>
+        <span class="pill" style="background: rgba(234,179,8,0.22); color: #a16207; font-weight: 800;">Admin access</span>
+    </div>
+    <div id="adminGroupChatContainer" style="display:flex;flex-direction:column;gap:8px;max-height:280px;overflow-y:auto;margin-bottom:14px;padding-right:4px;min-height:120px;">
+        @if (!Model.ChatMessages.Any())
+        {
+            <p style="font-size:12px;color:var(--muted);text-align:center;margin:auto;">No chat messages yet.</p>
+        }
+        else
+        {
+            @foreach (var msg in Model.ChatMessages)
+            {
+                var isAdminMsg = Model.AdministratorUserIds.Contains(msg.UserId);
+                <div class="group-chat-bubble @(isAdminMsg ? "group-chat-admin" : "") @(msg.IsDeleted ? "is-deleted" : "")" data-admin-msg="@msg.Id">
+                    <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:2px;">
+                        <strong style="font-size:11px;@(isAdminMsg ? "color:#a16207;" : "color:var(--ink);")">
+                            @(msg.User?.FullName ?? "Member")
+                            @if (isAdminMsg)
+                            {
+                                <span class="group-chat-admin-badge">ADMIN</span>
+                            }
+                            @if (msg.IsDeleted)
+                            {
+                                <span class="group-chat-admin-badge" style="background:rgba(186,75,67,.18);color:#ba4b43;">DELETED</span>
+                            }
+                            else if (msg.EditedAt != null)
+                            {
+                                <span class="group-chat-edited">edited</span>
+                            }
+                        </strong>
+                        <small style="font-size:9px;color:var(--muted);">@msg.SentAt.ToLocalTime().ToString("MMM dd, HH:mm")</small>
+                    </div>
+                    <p class="group-chat-text" style="margin:0;color:var(--muted);line-height:1.4;word-break:break-word;font-style:italic;">
+                        @if (msg.IsDeleted)
+                        {
+                            <text>This message was deleted.</text>
+                            <span style="display:block;margin-top:4px;font-size:11px;font-style:normal;text-decoration:line-through;opacity:.65;">@msg.Message</span>
+                        }
+                        else
+                        {
+                            @msg.Message
+                        }
+                    </p>
+                    @if (!msg.IsDeleted)
+                    {
+                        <div class="group-chat-actions">
+                            <button type="button" class="group-chat-action" data-admin-edit="@msg.Id">Edit</button>
+                            <form asp-action="DeleteGroupChatMessage" asp-route-id="@Model.Group.Id" asp-route-messageId="@msg.Id" method="post" class="group-chat-delete-form" data-confirm="Delete this message?">
+                                @Html.AntiForgeryToken()
+                                <button type="submit" class="group-chat-action is-danger">Delete</button>
+                            </form>
+                        </div>
+                        <form asp-action="EditGroupChatMessage" asp-route-id="@Model.Group.Id" asp-route-messageId="@msg.Id" method="post" class="group-chat-edit-form" hidden data-admin-edit-form="@msg.Id">
+                            @Html.AntiForgeryToken()
+                            <input type="text" name="message" maxlength="1000" value="@msg.Message" required />
+                            <div class="group-chat-edit-actions">
+                                <button type="button" class="button secondary small" data-admin-cancel-edit="@msg.Id">Cancel</button>
+                                <button type="submit" class="button small">Save</button>
+                            </div>
+                        </form>
+                    }
+                </div>
+            }
+        }
+    </div>
+    <form asp-action="PostGroupChat" asp-route-id="@Model.Group.Id" method="post" class="admin-group-chat-composer" style="display:flex;gap:8px;">
+        @Html.AntiForgeryToken()
+        <input type="text" name="message" maxlength="1000" required placeholder="Post an administrator message to this group…" style="flex:1;min-height:40px;border-radius:10px;" />
+        <button type="submit" class="button small" style="min-height:40px;font-weight:700;">Send as Admin</button>
+    </form>
+</div>
+
+@section Scripts {
+<script>
+document.addEventListener('admin:ajax-success', (e) => {
+    const form = e.target;
+    if (!(form instanceof HTMLFormElement)) return;
+    if (!form.action.includes('toggle-disable')) return;
+    const disabled = e.detail?.data?.disabled;
+    const btn = form.querySelector('[data-group-toggle]');
+    if (typeof disabled === 'boolean' && btn) {
+        btn.textContent = disabled ? 'Enable Group' : 'Soft Disable Group';
+        btn.classList.toggle('success', disabled);
+        btn.classList.toggle('secondary', !disabled);
+    }
+});
+document.querySelectorAll('[data-admin-edit]').forEach(btn => {
+    btn.addEventListener('click', () => {
+        const id = btn.getAttribute('data-admin-edit');
+        const row = btn.closest('[data-admin-msg]');
+        if (!row) return;
+        const form = row.querySelector(`[data-admin-edit-form="${id}"]`);
+        const text = row.querySelector('.group-chat-text');
+        const actions = row.querySelector('.group-chat-actions');
+        if (form) form.hidden = false;
+        if (text) text.hidden = true;
+        if (actions) actions.hidden = true;
+        form?.querySelector('input[name="message"]')?.focus();
+    });
+});
+document.querySelectorAll('[data-admin-cancel-edit]').forEach(btn => {
+    btn.addEventListener('click', () => {
+        const id = btn.getAttribute('data-admin-cancel-edit');
+        const row = btn.closest('[data-admin-msg]');
+        if (!row) return;
+        const form = row.querySelector(`[data-admin-edit-form="${id}"]`);
+        const text = row.querySelector('.group-chat-text');
+        const actions = row.querySelector('.group-chat-actions');
+        if (form) form.hidden = true;
+        if (text) text.hidden = false;
+        if (actions) actions.hidden = false;
+    });
+});
+</script>
+}

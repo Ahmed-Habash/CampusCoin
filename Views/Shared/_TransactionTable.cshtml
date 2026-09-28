@@ -1,0 +1,37 @@
+@model List<Transaction>
+<div class="transaction-container">
+<table class="transaction-table">
+<thead><tr><th>Transaction</th><th>Category</th><th>Date</th><th class="amount">Amount</th><th><span class="visually-hidden">Actions</span></th></tr></thead>
+<tbody>
+@foreach(var t in Model) {
+<tr>
+<td>
+    <div class="transaction-title">
+        <span class="transaction-icon @(t.Category.Type==CategoryType.Income ? "income-icon" : "")" aria-hidden="true">@(t.Category.Type==CategoryType.Income ? "↓" : "↑")</span>
+        <div class="transaction-description">
+            <strong>@t.Description</strong>
+            <small class="transaction-meta">@t.Category.Name · @t.Date.ToString("MMM d, yyyy")</small>
+        </div>
+    </div>
+</td>
+<td><span class="category-pill">@t.Category.Name</span></td>
+<td class="date-cell">@t.Date.ToString("MMM d, yyyy")</td>
+<td class="amount @(t.Category.Type==CategoryType.Income ? "income-text" : "")">@(t.Category.Type==CategoryType.Income ? "+" : "−")@Currency.Format(t.AmountCents)</td>
+<td><a class="edit-link" asp-controller="Transactions" asp-action="Edit" asp-route-id="@t.Id" aria-label="Edit @t.Description">Edit</a></td>
+</tr>
+}
+</tbody>
+</table>
+
+<div class="transaction-cards" aria-hidden="false">
+@foreach(var t in Model) {
+    <a class="transaction-card @(t.Category.Type==CategoryType.Income ? "is-income" : "")" asp-controller="Transactions" asp-action="Edit" asp-route-id="@t.Id">
+        <div>
+            <strong>@t.Description</strong>
+            <small>@t.Category.Name · @t.Date.ToString("MMM d")</small>
+        </div>
+        <em class="@(t.Category.Type==CategoryType.Income ? "income-text" : "")">@(t.Category.Type==CategoryType.Income ? "+" : "−")@Currency.Format(t.AmountCents)</em>
+    </a>
+}
+</div>
+</div>

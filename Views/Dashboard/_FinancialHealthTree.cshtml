@@ -1,0 +1,97 @@
+@model TreeHealthViewModel
+@{
+    var state = (Model.State ?? "Steady").ToLowerInvariant();
+    var motion = (Model.Motion ?? "idle").ToLowerInvariant();
+    var height = Math.Clamp(Model.GrowthPercent, 14, 100);
+    var blooms = Math.Clamp(Model.BloomCount, 1, 6);
+}
+<article class="panel money-garden-card"
+         data-garden-state="@state"
+         data-garden-motion="@motion"
+         data-garden-score="@Model.HealthScore"
+         style="--tree-growth:@height%; --bloom-count:@blooms;"
+         aria-label="Money Garden. Health @Model.HealthScore percent. @Model.Title.">
+    <div class="panel-heading">
+        <div>
+            <h2>The Money Garden</h2>
+            <p>Alive with your budgets, savings &amp; daily care</p>
+        </div>
+        <span class="pill money-garden-pill">@Model.Title</span>
+    </div>
+
+    <div class="money-garden-stage" aria-hidden="true">
+        <div class="mg-sky"></div>
+        <div class="mg-sun"></div>
+        <div class="mg-hills"></div>
+        <div class="mg-ground"></div>
+        <div class="mg-grass mg-grass-a"></div>
+        <div class="mg-grass mg-grass-b"></div>
+
+        @if (Model.HasBush)
+        {
+            <span class="mg-bush mg-bush-left"></span>
+            <span class="mg-bush mg-bush-right"></span>
+        }
+
+        <div class="mg-flowerbed">
+            @for (var i = 0; i < blooms; i++)
+            {
+                <span class="mg-flower f-@i @(i == 0 && Model.HasRare ? "is-rare" : "") @(state is "wilted" or "stressed" && i >= blooms - 1 ? "is-wilt" : "")"></span>
+            }
+        </div>
+
+        <div class="mg-tree financial-tree-plant">
+            <span class="financial-tree-trunk"></span>
+            <span class="financial-tree-canopy canopy-main"></span>
+            <span class="financial-tree-canopy canopy-left"></span>
+            <span class="financial-tree-canopy canopy-right"></span>
+            <span class="financial-tree-leaf leaf-a"></span>
+            <span class="financial-tree-leaf leaf-b"></span>
+            <span class="financial-tree-leaf leaf-c"></span>
+            @if (Model.HasGlow || state is "healthy" or "flowering")
+            {
+                <span class="financial-tree-bloom bloom-a"></span>
+                <span class="financial-tree-bloom bloom-b"></span>
+                <span class="financial-tree-bloom bloom-c"></span>
+            }
+        </div>
+
+        @if (Model.HasButterfly)
+        {
+            <span class="mg-butterfly b-a"></span>
+            <span class="mg-butterfly b-b"></span>
+        }
+        @if (Model.HasBird)
+        {
+            <span class="mg-bird"></span>
+        }
+        @if (Model.HasFox)
+        {
+            <span class="mg-fox" aria-hidden="true"></span>
+        }
+        @if (Model.HasGlow)
+        {
+            <span class="mg-particle p1"></span>
+            <span class="mg-particle p2"></span>
+            <span class="mg-particle p3"></span>
+            <span class="mg-particle p4"></span>
+        }
+    </div>
+
+    <div class="money-garden-meta">
+        <div class="money-garden-health">
+            <div class="money-garden-health-top">
+                <strong>@Model.HealthScore<span>%</span></strong>
+                <small>Garden health</small>
+            </div>
+            <div class="money-garden-bar" role="presentation">
+                <span style="width:@Math.Clamp(Model.HealthScore, 4, 100)%"></span>
+            </div>
+            <small class="money-garden-sub">
+                @(Model.IsMonthFinalized ? "Final month form" : "Live this month")
+                · @Model.ConsistencyDays day@(Model.ConsistencyDays == 1 ? "" : "s") of care
+            </small>
+        </div>
+        <p class="money-garden-soft">@Model.SoftMessage</p>
+    </div>
+</article>

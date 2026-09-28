@@ -1,0 +1,84 @@
+@model List<Transaction>
+@{
+    ViewData["Title"] = "Transactions";
+    ViewData["HeaderEyebrow"] = "Everyday money";
+    ViewData["HeaderTitle"] = "Transactions";
+    ViewData["HeaderLead"] = "What is coming in and going out.";
+    ViewData["HeaderPrimaryText"] = "＋ Add transaction";
+    ViewData["HeaderPrimaryController"] = "Transactions";
+    ViewData["HeaderPrimaryAction"] = "Edit";
+    ViewData["HeaderSecondaryText"] = "↻ Recurring";
+    ViewData["HeaderSecondaryController"] = "RecurringTransactions";
+    ViewData["HeaderSecondaryAction"] = "Index";
+}
+<partial name="_PageHeader" />
+
+<section class="data-tools">
+    <div class="data-tools-copy">
+        <strong>Import &amp; export</strong>
+        <span>Bring in a CSV, or download a spreadsheet / printable report.</span>
+    </div>
+    <div class="data-tool-actions">
+        <form method="post" asp-action="ImportCsv" enctype="multipart/form-data" class="import-form">
+            <label class="file-button">
+                <input type="file" name="file" accept=".csv,text/csv" required />
+                <span>Choose CSV</span>
+            </label>
+            <button class="button secondary small" type="submit">Import</button>
+        </form>
+        <span class="tool-sep" aria-hidden="true"></span>
+        <a class="button secondary small" asp-action="ExportCsv">CSV ↓</a>
+        <a class="button secondary small" asp-action="ExportPdf">PDF ↓</a>
+    </div>
+</section>
+
+<section class="panel" data-skeleton-host>
+    <div class="skeleton-block" hidden aria-hidden="true">
+        <div class="skeleton-line w60"></div>
+        <div class="skeleton-line"></div>
+        <div class="skeleton-line w80"></div>
+        <div class="skeleton-line w40"></div>
+    </div>
+    <form method="get" class="filter-bar">
+        <div class="filter-field filter-grow">
+            <label for="search">Search</label>
+            <input id="search" name="search" value="@ViewBag.Search" placeholder="Coffee, books, allowance…" />
+        </div>
+        <div class="filter-field">
+            <label for="type">Type</label>
+            <select id="type" name="type">
+                <option value="">All types</option>
+                <option value="Expense" selected="@(ViewBag.Type==CategoryType.Expense)">Expense</option>
+                <option value="Income" selected="@(ViewBag.Type==CategoryType.Income)">Income</option>
+            </select>
+        </div>
+        <div class="filter-field">
+            <label for="month">Month</label>
+            <input type="month" aria-label="Month" name="month" id="month" value="@ViewBag.Month" />
+        </div>
+        <div class="filter-actions">
+            <button class="button secondary small" type="submit">Apply</button>
+            <a asp-action="Index" class="text-link">Clear</a>
+        </div>
+    </form>
+    <div class="panel-heading">
+        <div>
+            <h2>All transactions</h2>
+            <p>@Model.Count recorded · amounts in @Currency.Code</p>
+        </div>
+        <span class="pill">@Model.Count</span>
+    </div>
+    @if (Model.Count == 0)
+    {
+        ViewData["EmptyTitle"] = "Nothing here just yet.";
+        ViewData["EmptyBody"] = "Try a different filter, or add your first transaction.";
+        ViewData["EmptyActionText"] = "＋ Add transaction";
+        ViewData["EmptyActionController"] = "Transactions";
+        ViewData["EmptyActionAction"] = "Edit";
+        <partial name="_EmptyState" />
+    }
+    else
+    {
+        <partial name="_TransactionTable" model="Model" />
+    }
+</section>

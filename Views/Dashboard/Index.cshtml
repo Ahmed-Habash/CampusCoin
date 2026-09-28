@@ -1,0 +1,255 @@
+@model DashboardViewModel
+@{
+    ViewData["Title"] = "Overview";
+    string Money(decimal n) => Currency.Format(n);
+    var isEmpty = Model.Recent.Count == 0 && Model.Income == 0 && Model.Expenses == 0;
+    var name = (Model.Name ?? "").Trim();
+    var greetName = string.IsNullOrEmpty(name) ? "there"
+        : (name.Length == 1 ? name.ToUpperInvariant() : char.ToUpperInvariant(name[0]) + name[1..]);
+}
+<link rel="stylesheet" href="~/css/financial-tree.css" asp-append-version="true" />
+<link rel="stylesheet" href="~/css/afford-calculator.css" asp-append-version="true" />
+<link rel="stylesheet" href="~/css/xp-whatif.css" asp-append-version="true" />
+<link rel="stylesheet" href="~/css/spend-compare.css" asp-append-version="true" />
+<link rel="stylesheet" href="~/css/future-you.css" asp-append-version="true" />
+<link rel="stylesheet" href="~/css/sunday-letter.css" asp-append-version="true" />
+
+<section class="dashboard-hero">
+    <div class="dashboard-hero-copy">
+        <span class="eyebrow">YOUR MONEY, IN MOTION</span>
+        <h1>Hey @greetName,<br /><em>let’s make a plan.</em></h1>
+        <p>A calmer view of what came in, what went out, and what your next move could be.</p>
+        <div class="hero-actions">
+            <a class="button" asp-controller="Transactions" asp-action="Edit">＋ Add transaction</a>
+            <a class="button hero-ghost" asp-controller="FutureYou" asp-action="Index">Future You</a>
+            <button class="button hero-ghost" type="button" data-open-assistant>Ask Coin</button>
+            <button class="button hero-ghost" type="button" data-open-afford>Can I afford it?</button>
+        </div>
+    </div>
+    <aside class="dashboard-hero-panel" aria-label="Month snapshot">
+        <div class="hero-panel-card">
+            <div class="hero-panel-top">
+                <div class="hero-panel-copy">
+                    <span class="tiny-label">This month</span>
+                    <strong class="hero-panel-balance @(Model.Balance < 0 ? "is-neg" : "")">@Money(Model.Balance)</strong>
+                    <small>Balance · @Currency.Code</small>
+                </div>
+                <div class="hero-mini-donut @(Model.CategoryAmounts.Length == 0 ? "is-empty" : "")">
+                    @if (Model.CategoryAmounts.Length > 0)
+                    {
+                        <canvas id="hero-category-chart" aria-label="Spending by category" role="img"></canvas>
+                    }
+                    else
+                    {
+                        <div class="hero-mini-empty" aria-hidden="true">◇</div>
+                    }
+                </div>
+            </div>
+            <div class="hero-panel-split">
+                <div class="is-in">
+                    <span><i aria-hidden="true">↓</i> In</span>
+                    <b>@Money(Model.Income)</b>
+                </div>
+                <div class="is-out">
+                    <span><i aria-hidden="true">↑</i> Out</span>
+                    <b>@Money(Model.Expenses)</b>
+                </div>
+            </div>
+            @if (Model.CategoryLabels.Length > 0)
+            {
+                <div class="hero-mini-legend">
+                    @for (int i = 0; i < Math.Min(3, Model.CategoryLabels.Length); i++)
+                    {
+                        <span><i class="legend-dot color-@(i % 7)"></i>@Model.CategoryLabels[i]</span>
+                    }
+                    @if (Model.CategoryLabels.Length > 3)
+                    {
+                        <span class="more">+@(Model.CategoryLabels.Length - 3)</span>
+                    }
+                </div>
+            }
+            <div class="hero-panel-pace">
+                <span>Safe to spend today</span>
+                <strong>@Model.SafeToSpend.AmountFormatted</strong>
+            </div>
+        </div>
+    </aside>
+</section>
+
+@if(isEmpty){
+<section class="onboard-strip" aria-label="Getting started">
+    <article class="onboard-card">
+        <span class="onboard-step">01</span>
+        <h3>Log your allowance</h3>
+        <p>Add one income so Campus Coin has a starting picture.</p>
+        <a class="button small" asp-controller="Transactions" asp-action="Edit">Add income</a>
+    </article>
+    <article class="onboard-card">
+        <span class="onboard-step">02</span>
+        <h3>Set a food budget</h3>
+        <p>Give everyday spending a limit you can actually follow.</p>
+        <a class="button small secondary" asp-controller="Budgets" asp-action="Edit">Set budget</a>
+    </article>
+    <article class="onboard-card">
+        <span class="onboard-step">03</span>
+        <h3>Ask Coin</h3>
+        <p>Try a question about your balance or how to use a feature.</p>
+        <button class="button small secondary" type="button" data-open-assistant>Open Ask Coin</button>
+    </article>
+</section>
+}
+
+@if (Model.XpProgressEnabled)
+{
+    <partial name="_XpProgress" model="Model.Xp" />
+}
+
+@if(Model.ActiveAnnouncements.Count > 0){
+    <div class="announcements-banner-container" style="margin-bottom:20px;">
+        @foreach(var ann in Model.ActiveAnnouncements){
+            <div class="notice success" style="border-left:4px solid var(--accent);background:var(--panel);padding:14px 18px;border-radius:12px;margin-bottom:10px;">
+                <strong style="display:block;font-size:13px;letter-spacing:-.2px;color:var(--ink);">@ann.Title</strong>
+                <span style="font-size:11px;color:var(--muted);display:block;margin-top:2px;">@ann.Message</span>
+            </div>
+        }
+    </div>
+}
+
+<div class="period-line">
+    <h2>Your month at a glance</h2>
+    <form method="get" class="month-picker">
+        <label for="month">Month</label>
+        <input id="month" name="month" type="month" aria-label="Month" value="@Model.Month.ToString("yyyy-MM")" />
+        <button class="button secondary small">View</button>
+    </form>
+</div>
+
+<section class="stat-grid">
+    <article class="stat-card balance">
+        <div class="stat-label">This month's balance</div>
+        <strong>@Money(Model.Balance)</strong>
+        <span class="stat-caption">Income minus expenses · @Currency.Code</span>
+        <span class="tree-status-chip" data-tree-state="@Model.Tree.State.ToLowerInvariant()"><i></i>Tree: @Model.Tree.Title · @Model.Tree.HealthScore</span>
+    </article>
+    <article class="stat-card"><div class="stat-label">Money in</div><strong>@Money(Model.Income)</strong><span class="stat-caption">Fuel for your plans</span></article>
+    <article class="stat-card"><div class="stat-label">Money out</div><strong>@Money(Model.Expenses)</strong><span class="stat-caption">Everyday life, accounted for</span></article>
+</section>
+
+<section class="chart-grid">
+    <partial name="_SafeToSpend" model="Model.SafeToSpend" />
+    <article class="panel ask-panel">
+        <div class="panel-heading"><div><h2>Ask Coin</h2><p>Quick questions about your account</p></div></div>
+        <div class="ask-chips">
+            <button type="button" data-assistant-suggestion="How much did I spend this month?" data-open-assistant>This month’s spending</button>
+            <button type="button" data-assistant-suggestion="What is my balance this month?" data-open-assistant>My balance</button>
+            <button type="button" data-assistant-suggestion="How do I add a transaction?" data-open-assistant>Add a transaction</button>
+            <button type="button" data-assistant-suggestion="What budgets am I close to using up?" data-open-assistant>Budget check</button>
+        </div>
+    </article>
+</section>
+
+<section class="chart-grid">
+    <partial name="_MonthCompare" model="Model.MonthCompare" />
+    <partial name="_FinancialHealthTree" model="Model.Tree" />
+</section>
+
+<div class="dash-flow">
+    <div class="dash-col">
+        <partial name="_SundayLetter" model="Model.SundayLetter" />
+        <article class="panel">
+            <div class="panel-heading"><div><h2>The bigger picture</h2><p>Income & expenses over the last 6 months</p></div><span class="pill">6 months</span></div>
+            <div class="chart-wrap"><canvas id="trend-chart" aria-label="Income and expense trends" role="img"></canvas></div>
+            <details class="chart-details"><summary>View chart data</summary><table><thead><tr><th>Month</th><th>Income</th><th>Expenses</th></tr></thead><tbody>@for(int i=0;i<Model.Labels.Length;i++){<tr><td>@Model.Labels[i]</td><td>@Money(Model.IncomeTrend[i])</td><td>@Money(Model.ExpenseTrend[i])</td></tr>}</tbody></table></details>
+        </article>
+        <partial name="_WhatIfCard" />
+        @if (Model.FutureYou != null)
+        {
+            <partial name="_AffordCalculator" />
+        }
+        <section class="panel" data-skeleton-host>
+            <div class="skeleton-block" hidden aria-hidden="true">
+                <div class="skeleton-line w60"></div>
+                <div class="skeleton-line"></div>
+                <div class="skeleton-line w80"></div>
+            </div>
+            <div class="panel-heading"><div><h2>Recent transactions</h2><p>The little things, all in one place</p></div><a class="text-link" asp-controller="Transactions" asp-action="Index">View all ↗</a></div>
+            @if(Model.Recent.Count==0){
+                ViewData["EmptyTitle"]="Your story starts here.";
+                ViewData["EmptyBody"]="Add an income or expense to see it here.";
+                ViewData["EmptyActionText"]="Add your first transaction";
+                ViewData["EmptyActionController"]="Transactions";
+                ViewData["EmptyActionAction"]="Edit";
+                <partial name="_EmptyState" />
+            }else{
+                <partial name="_TransactionTable" model="Model.Recent" />
+            }
+        </section>
+        <article class="panel">
+            <div class="panel-heading"><h2>Budget check-in</h2><a class="text-link" asp-controller="Budgets" asp-action="Index">Manage ↗</a></div>
+            @if(Model.Budgets.Count==0){
+                <div class="empty-state compact"><p class="muted">Give your spending a little direction.</p><a asp-controller="Budgets" asp-action="Edit" class="button secondary small">Set your first budget</a></div>
+            }
+            @foreach(var b in Model.Budgets.Take(3)){
+                <div class="budget-line">
+                    <div class="budget-line-top">
+                        <strong>@b.Category</strong>
+                        <span class="budget-line-spent">@Money(b.Spent) <span>/ @Money(b.Limit)</span></span>
+                    </div>
+                    <progress class="@(b.Percent>=100?"over":"")" value="@Math.Min(b.Percent,100)" max="100" aria-label="@b.Category budget used"></progress>
+                    <small class="budget-line-note @(b.Percent>=80?"warning-text":"muted")">@(b.Percent>=100 ? "Budget exceeded" : b.Percent>=80 ? "Getting close to your limit" : $"{b.Percent:0}% of budget used")</small>
+                </div>
+            }
+        </article>
+    </div>
+    <div class="dash-col">
+        @if (Model.FutureYou != null)
+        {
+            <partial name="_FutureYouCard" model="Model.FutureYou" />
+        }
+        else
+        {
+            <partial name="_AffordCalculator" />
+        }
+        <article class="panel category-panel">
+            <div class="panel-heading">
+                <div class="panel-title-row">
+                    <span class="panel-ico" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M20.6 13.4 12.7 21.3a2 2 0 0 1-2.8 0L2.7 14.1a2 2 0 0 1 0-2.8l7.9-7.9a2 2 0 0 1 1.4-.6H19a2 2 0 0 1 2 2v6.9a2 2 0 0 1-.6 1.4Z"/><circle cx="16.5" cy="7.5" r="1.2" fill="currentColor" stroke="none"/></svg>
+                    </span>
+                    <div>
+                        <h2>Category breakdown</h2>
+                        <p>Your spending by category</p>
+                    </div>
+                </div>
+            </div>
+            @if(Model.CategoryAmounts.Length>0){
+                <div class="category-breakdown">
+                    <div class="donut-wrap"><canvas id="category-chart" aria-label="Spending by category" role="img"></canvas><div class="donut-center"><small>TOTAL SPENT</small><strong>@Money(Model.Expenses)</strong></div></div>
+                    <div class="category-legend">@for(int i=0;i<Model.CategoryLabels.Length;i++){<div><span><i class="legend-dot color-@(i%7)"></i>@Model.CategoryLabels[i]</span><strong>@Money(Model.CategoryAmounts[i])</strong></div>}</div>
+                </div>
+            }else{
+                <div class="empty-state"><h3>A fresh canvas.</h3><p>Your first expense will bring this chart to life.</p><a asp-controller="Transactions" asp-action="Edit" class="button secondary small">Add expense</a></div>
+            }
+        </article>
+        <article class="panel tip-card">
+            <span class="tiny-label">A THOUGHT FOR YOUR WALLET</span>
+            <h3>A little awareness.<br />A little more freedom.</h3>
+            <p>@Model.Tip</p>
+        </article>
+        @if (Model.FutureYou?.ParallelLives != null)
+        {
+            <partial name="_ParallelLives" model="Model.FutureYou.ParallelLives" />
+        }
+    </div>
+</div>
+
+<partial name="_AffordModal" model="Model" />
+<partial name="_WhatIfModal" model="Model" />
+@section Scripts {
+<script src="~/lib/chart.umd.min.js"></script>
+<script id="dashboard-data" type="application/json">@Html.Raw(System.Text.Json.JsonSerializer.Serialize(new {labels=Model.Labels,income=Model.IncomeTrend,expenses=Model.ExpenseTrend,categories=Model.CategoryLabels,amounts=Model.CategoryAmounts}))</script>
+<script src="~/js/dashboard.js" asp-append-version="true"></script>
+<script src="~/js/financial-tree.js" asp-append-version="true"></script>
+<script src="~/js/afford-calculator.js" asp-append-version="true"></script>
+<script src="~/js/xp-whatif.js" asp-append-version="true"></script>
+}

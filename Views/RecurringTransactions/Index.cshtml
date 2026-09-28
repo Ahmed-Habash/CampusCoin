@@ -1,0 +1,66 @@
+@model List<RecurringTransaction>
+@{
+    ViewData["Title"] = "Recurring";
+    ViewData["HeaderEyebrow"] = "Routines";
+    ViewData["HeaderTitle"] = "Recurring";
+    ViewData["HeaderLead"] = "Allowances and subscriptions on autopilot.";
+    ViewData["HeaderPrimaryText"] = "＋ Add recurring";
+    ViewData["HeaderPrimaryController"] = "RecurringTransactions";
+    ViewData["HeaderPrimaryAction"] = "Edit";
+    var activeCount = Model.Count(x => x.IsActive);
+}
+<partial name="_PageHeader" />
+<section class="panel recurring-panel">
+    <div class="panel-heading">
+        <div>
+            <h2>Your recurring transactions</h2>
+            <p>Pause any routine when life changes.</p>
+        </div>
+        <div class="recurring-heading-meta">
+            <span class="pill">@activeCount active</span>
+            <span class="pill is-soft">@Model.Count total</span>
+        </div>
+    </div>
+    @if (Model.Count == 0)
+    {
+        ViewData["EmptyTitle"] = "Nothing on repeat.";
+        ViewData["EmptyBody"] = "Add an allowance or subscription to make your future self’s life easier.";
+        ViewData["EmptyActionText"] = "Create a recurring transaction";
+        ViewData["EmptyActionController"] = "RecurringTransactions";
+        ViewData["EmptyActionAction"] = "Edit";
+        <partial name="_EmptyState" />
+    }
+    else
+    {
+        <div class="recurring-list">
+            @foreach (var item in Model)
+            {
+                <article class="recurring-row @(item.IsActive ? "" : "is-paused")">
+                    <div class="recurring-icon" aria-hidden="true">↻</div>
+                    <div class="recurring-main">
+                        <strong>@item.Description</strong>
+                        <div class="recurring-tags">
+                            <span class="category-pill">@item.Category.Name</span>
+                            <span class="recurring-freq">@item.Frequency</span>
+                            @if (!item.IsActive)
+                            {
+                                <span class="status-chip is-warn">Paused</span>
+                            }
+                        </div>
+                    </div>
+                    <div class="recurring-amount">
+                        <strong>@Currency.Format(item.AmountCents)</strong>
+                        <small>@(item.IsActive ? $"Next {item.NextRunDate:MMM d, yyyy}" : "Not scheduling")</small>
+                    </div>
+                    <div class="recurring-actions">
+                        <a class="button secondary small" asp-action="Edit" asp-route-id="@item.Id">Edit</a>
+                        <form asp-action="Toggle" asp-route-id="@item.Id" method="post">
+                            @Html.AntiForgeryToken()
+                            <button class="button @(item.IsActive ? "secondary" : "") small" type="submit">@(item.IsActive ? "Pause" : "Resume")</button>
+                        </form>
+                    </div>
+                </article>
+            }
+        </div>
+    }
+</section>

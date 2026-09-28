@@ -1,0 +1,318 @@
+@model CampusCoin.ViewModels.FutureYouPageViewModel
+@{
+    ViewData["Title"] = "Future You";
+    string Money(decimal n) => Currency.Format(n);
+    var bootstrap = new
+    {
+        currencyCode = Model.CurrencyCode,
+        goalName = Model.GoalName,
+        goalTarget = Model.GoalTarget,
+        goalSaved = Model.GoalSaved,
+        goalRemaining = Model.GoalRemaining,
+        goalReached = Model.GoalReached,
+        usingTemporaryGoal = Model.UsingTemporaryGoal,
+        extraMonthlySavings = Model.ExtraMonthlySavings,
+        suggestedExtra = Model.SuggestedExtraSavings,
+        sliders = Model.Sliders.Select(s => new { s.Key, s.Label, s.Current, s.Smarter, s.Scenario, s.Max, s.IsPrimary }),
+        currentYou = Model.CurrentYou,
+        smarterYou = Model.SmarterYou,
+        yourScenario = Model.YourScenario
+    };
+}
+<link rel="stylesheet" href="~/css/future-you.css" asp-append-version="true" />
+
+<section class="fy-hero">
+    <div class="fy-hero-copy">
+        <span class="eyebrow">SANDBOX · ESTIMATES ONLY</span>
+        <h1>What will your money look like in the future?</h1>
+        <p>Experiment with your spending today and instantly see how it could affect your savings goal. Nothing here changes your real transactions, budgets, or goals.</p>
+        <div class="fy-hero-meta">
+            <span>Goal: <strong data-fy-goal-name>@(Model.GoalName)</strong></span>
+            <span>Remaining: <strong data-fy-goal-remaining>@Money(Model.GoalRemaining)</strong></span>
+            <span class="pill accent" data-fy-temp-pill style="@(Model.UsingTemporaryGoal ? null : "display:none")">Temporary simulator goal</span>
+        </div>
+    </div>
+    @if (Model.FutureMessage is { } msg)
+    {
+        <aside class="fy-message-card" aria-live="polite">
+            <span class="tiny-label">@msg.FromLabel</span>
+            <p>@msg.Body</p>
+        </aside>
+    }
+</section>
+
+@if (!Model.HasTransactionHistory)
+{
+    <div class="notice" style="margin-bottom:18px;">
+        You’re starting with light data. Add a few transactions for sharper estimates — the simulator still works with sensible defaults.
+        <a asp-controller="Transactions" asp-action="Edit" class="text-link">Add a transaction ↗</a>
+    </div>
+}
+
+<section class="fy-layout">
+    <article class="panel fy-controls">
+        <div class="panel-heading">
+            <div>
+                <h2>Control panel</h2>
+                <p>Drag sliders — live recalculation, zero database writes.</p>
+            </div>
+        </div>
+
+        <div class="fy-try-row" id="fy-try-buttons">
+            <button type="button" class="fy-chip" data-try="food10">Reduce food 10%</button>
+            <button type="button" class="fy-chip is-accent" data-try="extra25">Save extra @Money(25)</button>
+            <button type="button" class="fy-chip is-accent" data-try="smarter">Match Smarter You</button>
+            <button type="button" class="fy-chip is-muted" data-try="reset">Reset to current</button>
+        </div>
+
+        <div class="fy-sliders" id="fy-sliders">
+            @foreach (var s in Model.Sliders)
+            {
+                <label class="fy-slider">
+                    <strong>@s.Label</strong>
+                    <input type="range" min="0" max="@Math.Ceiling(s.Max)" step="1" value="@Math.Round(s.Scenario)"
+                           data-key="@s.Key" data-current="@s.Current" data-smarter="@s.Smarter" aria-label="@s.Label" />
+                    <output data-out="@s.Key">@Money(s.Scenario)</output>
+                </label>
+            }
+            <label class="fy-slider">
+                <strong>Extra monthly savings</strong>
+                <input type="range" id="fy-extra" min="0" max="@Math.Max(150, (int)Model.SuggestedExtraSavings * 3)" step="1"
+                       value="@Math.Round(Model.ExtraMonthlySavings)" aria-label="Extra monthly savings" />
+                <output data-out="extra">@Money(Model.ExtraMonthlySavings)</output>
+            </label>
+        </div>
+
+        <div class="fy-temp-goal">
+            <strong>Monthly savings target</strong>
+            <div class="fy-temp-goal-row has-apply">
+                <input id="fy-temp-goal" type="number" min="1" step="1" value="@Math.Round(Model.GoalTarget)" aria-label="Monthly savings target" />
+                <input id="fy-temp-goal-name" type="text" maxlength="80" value="@Model.GoalName" placeholder="Goal name" aria-label="Goal name" />
+                <button type="button" class="button secondary" id="fy-temp-goal-apply">Apply</button>
+            </div>
+        </div>
+    </article>
+
+    <div class="fy-right-stack">
+        <section class="fy-paths" id="fy-paths">
+            <article class="panel fy-path" data-path="current">
+                <span class="tiny-label">PATH 1</span>
+                <h3>Current You</h3>
+                <strong class="fy-metric" data-field="monthly">@Model.CurrentYou.MonthlySavingsFormatted</strong>
+                <small>Est. monthly savings</small>
+                <div class="fy-path-meta">
+                    <p data-field="months">@Model.CurrentYou.MonthsToGoalLabel</p>
+                    <p class="muted" data-field="date">@Model.CurrentYou.GoalDateLabel</p>
+                </div>
+            </article>
+            <article class="panel fy-path is-accent" data-path="smarter">
+                <span class="tiny-label">PATH 2</span>
+                <h3>Smarter You</h3>
+                <strong class="fy-metric" data-field="monthly">@Model.SmarterYou.MonthlySavingsFormatted</strong>
+                <small>Est. monthly savings</small>
+                <div class="fy-path-meta">
+                    <p data-field="months">@Model.SmarterYou.MonthsToGoalLabel</p>
+                    <p class="muted" data-field="date">@Model.SmarterYou.GoalDateLabel</p>
+                </div>
+            </article>
+            <article class="panel fy-path is-signal" data-path="scenario">
+                <span class="tiny-label">PATH 3</span>
+                <h3>Your Scenario</h3>
+                <strong class="fy-metric" data-field="monthly">@Model.YourScenario.MonthlySavingsFormatted</strong>
+                <small>Est. monthly savings</small>
+                <div class="fy-path-meta">
+                    <p data-field="months">@Model.YourScenario.MonthsToGoalLabel</p>
+                    <p class="muted" data-field="extra">Extra vs current: @Model.YourScenario.ExtraVsCurrentFormatted</p>
+                    <p class="muted" data-field="date">@Model.YourScenario.GoalDateLabel</p>
+                </div>
+            </article>
+        </section>
+
+        <article class="panel fy-chart-panel">
+            <div class="panel-heading">
+                <div>
+                    <h2>Savings over time</h2>
+                    <p>Three estimated paths toward @(Model.GoalName).</p>
+                </div>
+            </div>
+            <div class="fy-chart-wrap">
+                <canvas id="fy-chart" aria-label="Savings accumulation chart" role="img"></canvas>
+            </div>
+            <p class="fy-chart-note muted">Dashed line = goal target. Lines keep rising so you can compare path speed (estimates only).</p>
+            <p class="fy-coach" id="fy-coach" data-tone="@Model.YourScenario.CoachingTone">@Model.YourScenario.CoachingMessage</p>
+        </article>
+    </div>
+</section>
+
+<section class="fy-grid-2">
+    <article class="panel">
+        <div class="panel-heading"><div><h2>One decision changes everything</h2><p>Hypothetical purchase — sandbox only.</p></div></div>
+        <label for="fy-purchase">Purchase amount</label>
+        <div class="fy-temp-goal-row">
+            <input id="fy-purchase" type="number" min="0" step="0.01" placeholder="8" aria-label="Purchase amount" />
+            <button type="button" class="button secondary" id="fy-purchase-go">See impact</button>
+        </div>
+        <p class="fy-decision" id="fy-decision" aria-live="polite">Enter an amount to see how it could shift your goal timing.</p>
+    </article>
+
+    <article class="panel">
+        <div class="panel-heading"><div><h2>Cheaper alternative tips</h2><p>Based on your own recent spending.</p></div></div>
+        @if (Model.Tips.Count == 0)
+        {
+            <div class="empty-state compact"><p class="muted">Log a few repeat expenses to unlock personalised swaps.</p></div>
+        }
+        else
+        {
+            <div class="fy-tips" id="fy-tips">
+                @foreach (var tip in Model.Tips)
+                {
+                    <div class="fy-tip">
+                        <strong>@tip.Title</strong>
+                        <p>@tip.Body</p>
+                        <button type="button" class="button small secondary"
+                                data-try-plan
+                                data-extra="@tip.SimulatorExtraMonthly"
+                                data-category="@tip.CategoryKey"
+                                data-cut="@tip.SimulatorCategoryCutPercent">Try this saving plan</button>
+                    </div>
+                }
+            </div>
+        }
+    </article>
+</section>
+
+<section class="fy-grid-2">
+    <article class="panel fy-challenge" id="fy-challenge">
+        <div class="panel-heading">
+            <div>
+                <h2>30-Day Campus Challenge</h2>
+                <p>Optional daily micro-goals from your patterns. Pause anytime.</p>
+            </div>
+        </div>
+        @if (!Model.Challenge.HasChallenge)
+        {
+            <p class="muted">Start a gentle 30-day streak. Completing days never punishes you — it only feeds insights here.</p>
+            <form asp-action="StartChallenge" method="post">
+                @Html.AntiForgeryToken()
+                <button class="button" type="submit">Start 30-day challenge</button>
+            </form>
+        }
+        else
+        {
+            <div class="fy-challenge-stats">
+                <div><span class="tiny-label">STREAK</span><strong>@Model.Challenge.StreakDays days</strong></div>
+                <div><span class="tiny-label">PROGRESS</span><strong>@Model.Challenge.CompletionPercent%</strong></div>
+                <div><span class="tiny-label">STATUS</span><strong>@Model.Challenge.Status</strong></div>
+            </div>
+            <progress value="@Model.Challenge.CompletionPercent" max="100" aria-label="Challenge completion"></progress>
+            @if (!string.IsNullOrWhiteSpace(Model.Challenge.TodayMicroGoal))
+            {
+                <div class="fy-today-goal">
+                    <span class="tiny-label">TODAY · DAY @Model.Challenge.DayNumber</span>
+                    <p>@Model.Challenge.TodayMicroGoal</p>
+                    <form asp-action="ChallengeDay" method="post" class="fy-inline-forms">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="challengeId" value="@Model.Challenge.ChallengeId" />
+                        <input type="hidden" name="dayNumber" value="@Model.Challenge.DayNumber" />
+                        <button class="button small" type="submit">@(Model.Challenge.TodayCompleted ? "Undo today" : "Mark today done")</button>
+                    </form>
+                </div>
+            }
+            <div class="fy-inline-forms" style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap;">
+                @if (Model.Challenge.Status == "Active")
+                {
+                    <form asp-action="ChallengeStatus" method="post">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="challengeId" value="@Model.Challenge.ChallengeId" />
+                        <input type="hidden" name="status" value="Paused" />
+                        <button class="button secondary small" type="submit">Pause</button>
+                    </form>
+                }
+                @if (Model.Challenge.Status == "Paused")
+                {
+                    <form asp-action="ChallengeStatus" method="post">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="challengeId" value="@Model.Challenge.ChallengeId" />
+                        <input type="hidden" name="status" value="Active" />
+                        <button class="button small" type="submit">Resume</button>
+                    </form>
+                }
+                @if (Model.Challenge.Status != "Completed")
+                {
+                    <form asp-action="ChallengeStatus" method="post">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="challengeId" value="@Model.Challenge.ChallengeId" />
+                        <input type="hidden" name="status" value="Completed" />
+                        <button class="button secondary small" type="submit">Complete challenge</button>
+                    </form>
+                }
+            </div>
+            <div class="fy-day-dots" aria-label="Challenge calendar">
+                @foreach (var d in Model.Challenge.Days)
+                {
+                    <span class="fy-dot @(d.IsCompleted ? "done" : "") @(d.IsToday ? "today" : "") @(d.IsFuture ? "future" : "")" title="Day @d.DayNumber: @d.MicroGoal">@d.DayNumber</span>
+                }
+            </div>
+        }
+    </article>
+
+    <article class="panel fy-parallel" id="fy-parallel">
+        <div class="panel-heading">
+            <div>
+                <h2>Parallel Lives</h2>
+                <p>Short, honest stories — never shaming.</p>
+            </div>
+        </div>
+        @if (Model.ParallelLivesHidden || Model.ParallelLives?.Hidden == true)
+        {
+            <p class="muted">Stories are hidden.</p>
+            <form asp-action="SetParallelLivesVisibility" method="post">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="hidden" value="false" />
+                <button class="button secondary small" type="submit">Show stories again</button>
+            </form>
+        }
+        else if (Model.ParallelLives != null)
+        {
+            <div class="fy-lives">
+                <div>
+                    <span class="tiny-label">LIFE A · CURRENT PATH</span>
+                    <p id="fy-life-a">@Model.ParallelLives.LifeA</p>
+                </div>
+                <div>
+                    <span class="tiny-label">LIFE B · IMPROVED PATH</span>
+                    <p id="fy-life-b">@Model.ParallelLives.LifeB</p>
+                </div>
+            </div>
+            <div class="fy-inline-forms" style="display:flex;gap:8px;flex-wrap:wrap;margin-top:14px;">
+                <form asp-action="RegenerateParallelLives" method="post" id="fy-regen-form">
+                    @Html.AntiForgeryToken()
+                    <button class="button secondary small" type="submit">Regenerate</button>
+                </form>
+                <form asp-action="SetParallelLivesVisibility" method="post">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="hidden" value="true" />
+                    <button class="button secondary small" type="submit">Hide stories</button>
+                </form>
+            </div>
+        }
+    </article>
+</section>
+
+<section class="panel fy-prefs">
+    <div class="panel-heading"><div><h2>Future You preferences</h2><p>Messages never block a transaction.</p></div></div>
+    <form asp-action="SetMessages" method="post" class="fy-pref-form">
+        @Html.AntiForgeryToken()
+        <input type="hidden" name="enabled" value="false" />
+        <label class="checkbox">
+            <input type="checkbox" name="enabled" value="true" @(Model.MessagesEnabled ? "checked" : null) onchange="this.form.submit()" />
+            Show “Message from Future You” nudges
+        </label>
+    </form>
+</section>
+
+@section Scripts {
+<script src="~/lib/chart.umd.min.js"></script>
+<script id="fy-bootstrap" type="application/json">@Html.Raw(System.Text.Json.JsonSerializer.Serialize(bootstrap))</script>
+<script src="~/js/future-you.js" asp-append-version="true"></script>
+}

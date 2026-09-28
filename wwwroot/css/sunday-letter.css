@@ -1,0 +1,133 @@
+/* Sealed Sunday Letter — calm, compact, one clear story */
+.sunday-letter-row{align-items:start;margin-top:0;margin-bottom:0}
+.sunday-letter-card{
+  position:relative;overflow:hidden;align-self:start;
+  padding:20px 20px 18px !important;
+  background:
+    linear-gradient(165deg, #fff 0%, #f7faff 55%, #eef4ff 100%) !important;
+  border:1px solid color-mix(in srgb, var(--accent) 20%, var(--line)) !important;
+  box-shadow:0 1px 2px rgba(15,23,42,.04), 0 16px 36px rgba(37,99,235,.08) !important;
+}
+[data-theme=dark] .sunday-letter-card{
+  background:linear-gradient(165deg, color-mix(in srgb, var(--accent) 12%, var(--panel)), var(--panel) 62%) !important;
+}
+[data-theme=dark] .sunday-letter-top h2{color:var(--ink) !important}
+[data-theme=dark] .sunday-letter-week{color:var(--muted) !important}
+[data-theme=dark] .sunday-seal-copy p,
+[data-theme=dark] .sunday-ready-copy p{color:var(--ink-soft,var(--muted)) !important}
+[data-theme=dark] .sunday-seal-copy strong,
+[data-theme=dark] .sunday-ready-copy strong{color:var(--ink) !important}
+[data-theme=dark] .sunday-letter-card[data-letter-tone=hopeful]{
+  background:linear-gradient(165deg, color-mix(in srgb, var(--ok) 10%, var(--panel)), var(--panel) 62%) !important;
+  border-color:color-mix(in srgb, var(--ok) 22%, var(--line)) !important;
+}
+[data-theme=dark] .sunday-letter-card[data-letter-tone=recovery]{
+  background:linear-gradient(165deg, color-mix(in srgb, var(--warn) 10%, var(--panel)), var(--panel) 62%) !important;
+  border-color:color-mix(in srgb, var(--warn) 22%, var(--line)) !important;
+}
+.sunday-letter-card::before{
+  content:"";position:absolute;inset:0 auto auto 0;width:100%;height:3px;
+  background:linear-gradient(90deg,#2563eb,#38bdf8 55%,#93c5fd);
+  opacity:.9;pointer-events:none;
+}
+.sunday-letter-top{
+  position:relative;z-index:1;
+  display:flex;align-items:flex-start;justify-content:space-between;gap:14px;
+  margin-bottom:14px;
+}
+.sunday-letter-top .tiny-label{display:block;margin-bottom:6px;color:var(--accent-deep)}
+.sunday-letter-top h2{
+  margin:0;font-family:var(--font-display);font-size:clamp(1.12rem,2vw,1.28rem);
+  letter-spacing:-.03em;line-height:1.18;color:var(--ink);max-width:22ch;
+}
+.sunday-letter-week{margin:6px 0 0;font-size:12px;color:var(--muted);font-weight:600}
+.sunday-letter-pill{
+  flex:0 0 auto;align-self:flex-start;font-size:10.5px;font-weight:750;
+  background:#e8f0ff !important;color:#1d4ed8 !important;border:1px solid #c7d7fe;
+  box-shadow:none;
+}
+[data-theme=dark] .sunday-letter-pill{
+  background:color-mix(in srgb, var(--accent) 18%, var(--panel)) !important;
+  color:var(--accent) !important;border-color:color-mix(in srgb, var(--accent) 30%, var(--line));
+}
+
+.sunday-seal,.sunday-ready{
+  position:relative;z-index:1;
+  display:grid;grid-template-columns:52px 1fr;gap:14px;align-items:center;
+  padding:0;border:0;background:transparent;box-shadow:none;
+}
+.sunday-seal-wax{
+  width:52px;height:52px;border-radius:50%;
+  display:grid;place-items:center;
+  background:radial-gradient(circle at 32% 28%,#fb7185,#be123c 58%,#7f1d1d);
+  box-shadow:0 10px 22px rgba(190,18,60,.26), inset 0 1px 0 rgba(255,255,255,.28);
+  color:#fff;font-family:var(--font-display);font-weight:800;font-size:.92rem;
+  animation:sunday-seal-breathe 4.8s ease-in-out infinite;
+}
+.sunday-seal-copy strong,.sunday-ready-copy strong{
+  display:block;margin:0 0 4px;font-family:var(--font-display);
+  font-size:1rem;letter-spacing:-.02em;color:var(--ink);
+}
+.sunday-seal-copy p,.sunday-ready-copy p{
+  margin:0 0 10px;color:var(--ink-soft);font-size:13px;line-height:1.45;
+}
+.sunday-seal-row{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center}
+.sunday-seal-meter{
+  height:6px;border-radius:999px;overflow:hidden;
+  background:rgba(37,99,235,.1);border:0;
+}
+.sunday-seal-meter > span{
+  display:block;height:100%;border-radius:inherit;
+  background:linear-gradient(90deg,#2563eb,#38bdf8);
+}
+.sunday-seal-row small{font-size:11px;font-weight:750;color:var(--accent-deep);white-space:nowrap}
+.sunday-ready-mark{
+  width:52px;height:52px;border-radius:14px;display:grid;place-items:center;font-size:1.3rem;
+  background:linear-gradient(145deg,#dbe7ff,#eff6ff);border:1px solid #bfdbfe;
+}
+
+.sunday-opened{position:relative;z-index:1}
+.sunday-letter-body{
+  display:grid;gap:8px;padding:0;border:0;background:transparent;
+}
+.sunday-letter-body p{margin:0;font-size:13.5px;line-height:1.55;color:var(--ink-soft)}
+.sunday-letter-body.is-archive{
+  margin-top:8px;padding:10px 12px;border-radius:12px;
+  background:color-mix(in srgb, var(--paper) 70%, var(--panel));
+  border:1px solid var(--line);
+}
+.sunday-letter-actions{display:flex;gap:8px;margin-top:12px;align-items:center}
+
+.sunday-letterbox{position:relative;z-index:1;margin-top:14px;padding-top:12px;border-top:1px solid var(--line)}
+.sunday-letterbox > summary{
+  cursor:pointer;list-style:none;display:flex;justify-content:space-between;gap:10px;align-items:center;
+}
+.sunday-letterbox > summary::-webkit-details-marker{display:none}
+.sunday-letterbox > summary strong{font-family:var(--font-display);font-size:12.5px}
+.sunday-letterbox > summary small{color:var(--muted);font-size:11px;font-weight:650}
+.sunday-letterbox-list{list-style:none;margin:8px 0 0;padding:0;display:grid;gap:6px}
+.sunday-letterbox-list details{border:1px solid var(--line);border-radius:10px;background:var(--panel);padding:8px 10px}
+.sunday-letterbox-list summary{
+  cursor:pointer;list-style:none;display:flex;justify-content:space-between;gap:8px;
+  font-size:12px;font-weight:700;
+}
+.sunday-letterbox-list summary::-webkit-details-marker{display:none}
+.sunday-letterbox-list summary small{color:var(--muted);font-size:10.5px;font-weight:600}
+
+.sunday-letter-card[data-letter-tone=hopeful]{
+  background:linear-gradient(165deg,#fff 0%, #f3fbf7 55%, #e8f7ef 100%) !important;
+  border-color:color-mix(in srgb, var(--ok) 22%, var(--line)) !important;
+}
+.sunday-letter-card[data-letter-tone=hopeful]::before{
+  background:linear-gradient(90deg,#059669,#34d399);
+}
+.sunday-letter-card[data-letter-tone=recovery]{
+  background:linear-gradient(165deg,#fff 0%, #fff8f1 55%, #ffefdf 100%) !important;
+  border-color:color-mix(in srgb, var(--warn) 22%, var(--line)) !important;
+}
+.sunday-letter-card[data-letter-tone=recovery]::before{
+  background:linear-gradient(90deg,#d97706,#fbbf24);
+}
+
+@keyframes sunday-seal-breathe{0%,100%{transform:scale(1)}50%{transform:scale(1.04)}}
+@media (prefers-reduced-motion:reduce){.sunday-seal-wax{animation:none}}

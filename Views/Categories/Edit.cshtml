@@ -1,0 +1,28 @@
+@model CategoryForm
+@{ViewData["Title"]=Model.Id==0?"New category":"Edit category";}
+<a class="back-link" asp-action="Index">← Back to categories</a>
+<div class="page-heading"><div><h1>@ViewData["Title"]</h1><p>Make your money organization feel like you.</p></div></div>
+<section class="panel form-panel">
+    <form method="post" id="category-edit-form">
+        <input asp-for="Id" type="hidden" />
+        <div asp-validation-summary="All" class="validation" role="alert"></div>
+        <label asp-for="Name"></label>
+        <input asp-for="Name" placeholder="e.g. Side projects" />
+        <label asp-for="Type"></label>
+        <select asp-for="Type" asp-items="Html.GetEnumSelectList<CategoryType>()"></select>
+        <div class="form-actions">
+            @if(Model.Id!=0){
+                <button type="submit" form="category-delete-form" class="danger-link" style="white-space:nowrap">Delete category</button>
+            }
+            <div style="margin-left:auto;display:flex;gap:8px;align-items:center">
+                <a asp-action="Index" class="button secondary">Cancel</a>
+                <button class="button" type="submit">Save category ↗</button>
+            </div>
+        </div>
+    </form>
+    @if(Model.Id!=0){
+        <form method="post" asp-action="Delete" asp-route-id="@Model.Id" id="category-delete-form" class="delete-form" data-confirm="Remove this personal category?" style="display:none"></form>
+    }
+</section>
+
+

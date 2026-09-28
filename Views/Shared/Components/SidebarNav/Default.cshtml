@@ -1,0 +1,56 @@
+@model SidebarNavViewModel
+@{
+    var section = ViewContext.RouteData.Values["controller"]?.ToString();
+    var action = ViewContext.RouteData.Values["action"]?.ToString();
+    var p = Model.Permissions;
+}
+<nav class="side-nav" aria-label="Main navigation">
+@if (Model.ShowAdminUi)
+{
+    <a class="nav-item @(action == "Index" && section == "Admin" ? "active" : "")" asp-controller="Admin" asp-action="Index"><span class="nav-ico" aria-hidden="true">◈</span><span class="nav-label">Dashboard</span></a>
+    @if (p.CanOpenUsers)
+    {
+        <a class="nav-item @(action == "Users" ? "active" : "")" asp-controller="Admin" asp-action="Users"><span class="nav-ico" aria-hidden="true">◎</span><span class="nav-label">Users</span></a>
+    }
+    @if (p.CanOpenGroups)
+    {
+        <a class="nav-item @(action == "Groups" || action == "GroupDetails" ? "active" : "")" asp-controller="Admin" asp-action="Groups"><span class="nav-ico" aria-hidden="true">▣</span><span class="nav-label">Groups</span></a>
+        <a class="nav-item @(action == "AbuseReports" ? "active" : "")" asp-controller="Admin" asp-action="AbuseReports"><span class="nav-ico" aria-hidden="true">⚑</span><span class="nav-label">Abuse reports</span></a>
+        <a class="nav-item @(action == "SharedExpenses" ? "active" : "")" asp-controller="Admin" asp-action="SharedExpenses"><span class="nav-ico" aria-hidden="true">▤</span><span class="nav-label">Expenses</span></a>
+        <a class="nav-item @(action == "GroupSettings" ? "active" : "")" asp-controller="Admin" asp-action="GroupSettings"><span class="nav-ico" aria-hidden="true">⚙</span><span class="nav-label">Group setup</span></a>
+    }
+    @if (p.CanOpenCategories)
+    {
+        <a class="nav-item @(action == "Categories" ? "active" : "")" asp-controller="Admin" asp-action="Categories"><span class="nav-ico" aria-hidden="true">▦</span><span class="nav-label">Categories</span></a>
+    }
+    @if (p.CanOpenAnnouncements)
+    {
+        <a class="nav-item @(action == "Announcements" ? "active" : "")" asp-controller="Admin" asp-action="Announcements"><span class="nav-ico" aria-hidden="true">☰</span><span class="nav-label">Announcements</span></a>
+    }
+    @if (p.CanOpenTipTemplates)
+    {
+        <a class="nav-item @(action == "TipTemplates" ? "active" : "")" asp-controller="Admin" asp-action="TipTemplates"><span class="nav-ico" aria-hidden="true">✧</span><span class="nav-label">Tips</span></a>
+    }
+    @if (p.CanOpenStatistics)
+    {
+        <a class="nav-item @(action == "Statistics" ? "active" : "")" asp-controller="Admin" asp-action="Statistics"><span class="nav-ico" aria-hidden="true">▦</span><span class="nav-label">Statistics</span></a>
+    }
+}
+else
+{
+    foreach (var item in new[] {
+        ("Dashboard","◈","Overview"),
+        ("Transactions","⇄","Transactions"),
+        ("RecurringTransactions","↻","Recurring"),
+        ("Budgets","◉","Budgets"),
+        ("FutureYou","◷","Future You"),
+        ("Groups","▣","Friend Groups"),
+        ("Insights","✦","Insights"),
+        ("Categories","▦","Categories"),
+        ("Settings","⚙","Settings")
+    })
+    {
+        <a class="nav-item @(section == item.Item1 ? "active" : "")" asp-controller="@item.Item1" asp-action="Index"><span class="nav-ico" aria-hidden="true">@item.Item2</span><span class="nav-label">@item.Item3</span></a>
+    }
+}
+</nav>

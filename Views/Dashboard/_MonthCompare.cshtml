@@ -1,0 +1,69 @@
+@model MonthComparisonViewModel
+@{
+    string Arrow(decimal? pct, bool expense = false)
+    {
+        if (pct is null) return "—";
+        var up = pct > 0;
+        // For expenses, up is usually worse; still show direction clearly.
+        var symbol = pct == 0 ? "→" : up ? "↑" : "↓";
+        return $"{symbol} {Math.Abs(pct.Value):0}%";
+    }
+    string Tone(decimal? pct, bool expense = false)
+    {
+        if (pct is null or 0) return "flat";
+        var up = pct > 0;
+        if (expense) return up ? "worse" : "better";
+        return up ? "better" : "worse";
+    }
+}
+<article class="panel month-compare-card">
+    <div class="panel-heading">
+        <div>
+            <h2>This Month vs Last Month</h2>
+            <p>@Model.CurrentLabel compared with @Model.PreviousLabel</p>
+        </div>
+        <span class="pill">Compare</span>
+    </div>
+    <div class="month-compare-grid">
+        <div class="month-compare-row">
+            <span class="month-compare-label">Income</span>
+            <div class="month-compare-vals">
+                <div><small>This month</small><strong>@Model.CurrentIncomeFormatted</strong></div>
+                <div><small>Last month</small><strong>@Model.PreviousIncomeFormatted</strong></div>
+            </div>
+            <span class="month-compare-delta @Tone(Model.IncomeChangePercent)">@Arrow(Model.IncomeChangePercent)</span>
+        </div>
+        <div class="month-compare-row">
+            <span class="month-compare-label">Expenses</span>
+            <div class="month-compare-vals">
+                <div><small>This month</small><strong>@Model.CurrentExpensesFormatted</strong></div>
+                <div><small>Last month</small><strong>@Model.PreviousExpensesFormatted</strong></div>
+            </div>
+            <span class="month-compare-delta @Tone(Model.ExpenseChangePercent, expense: true)">@Arrow(Model.ExpenseChangePercent, expense: true)</span>
+        </div>
+        <div class="month-compare-row">
+            <span class="month-compare-label">Saved / overspent</span>
+            <div class="month-compare-vals">
+                <div><small>This month</small><strong class="@(Model.CurrentSaved < 0 ? "is-neg" : "")">@Model.CurrentSavedFormatted</strong></div>
+                <div><small>Last month</small><strong class="@(Model.PreviousSaved < 0 ? "is-neg" : "")">@Model.PreviousSavedFormatted</strong></div>
+            </div>
+            <span class="month-compare-delta @Tone(Model.SavedChangePercent)">@Arrow(Model.SavedChangePercent)</span>
+        </div>
+        <div class="month-compare-row top-cat">
+            <span class="month-compare-label">Top category</span>
+            <div class="month-compare-vals">
+                <div><small>This month</small><strong>@Model.CurrentTopCategory</strong><em>@Model.CurrentTopCategoryAmountFormatted</em></div>
+                <div><small>Last month</small><strong>@Model.PreviousTopCategory</strong><em>@Model.PreviousTopCategoryAmountFormatted</em></div>
+            </div>
+            @if (Model.TopCategoryChangePercent is decimal topPct)
+            {
+                <span class="month-compare-delta @Tone(topPct, expense: true)">@Arrow(topPct, expense: true)</span>
+            }
+            else
+            {
+                <span class="month-compare-delta flat">shift</span>
+            }
+        </div>
+    </div>
+    <p class="month-compare-note">@Model.TopCategoryNote</p>
+</article>

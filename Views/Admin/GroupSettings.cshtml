@@ -1,0 +1,148 @@
+@model CampusCoin.ViewModels.GroupSystemSettingsForm
+@{
+    ViewData["Title"] = "Group System Controls";
+    var eventCodes = ViewBag.EventCodes as List<CampusCoin.Models.EventInviteCode> ?? new List<CampusCoin.Models.EventInviteCode>();
+    var now = DateTime.UtcNow;
+}
+
+<div style="display: flex; gap: 12px; align-items: center; margin-bottom: 20px;">
+    <a class="button secondary small" asp-controller="Admin" asp-action="Groups" style="display: inline-flex; align-items: center; gap: 6px; font-weight: 700;">
+        ← Back to Group Management
+    </a>
+</div>
+
+<div class="page-heading" style="margin-bottom: 28px;">
+    <div>
+        <span class="eyebrow" style="color:var(--signal);">SYSTEM GOVERNANCE</span>
+        <h1 style="font-size:32px;font-weight:800;margin:6px 0 4px;letter-spacing:-1px;">Group &amp; Campus Pulse System Controls</h1>
+        <p style="color:var(--muted);font-size:13px;margin:0;">Configure global switches, maximum group sizes, invitation rules, event codes, and group announcements.</p>
+    </div>
+</div>
+
+@if (TempData["SettingsSaved"] is string savedMsg)
+{
+    <div class="notice success" style="margin-bottom:16px;" role="status">@savedMsg</div>
+}
+@if (TempData["Error"] is string settingsError)
+{
+    <div class="notice error" style="margin-bottom:16px;" role="alert">@settingsError</div>
+}
+
+<div style="display:grid;grid-template-columns:1fr 340px;gap:24px;max-width:1160px;align-items:start;">
+    <div class="panel" style="padding: 32px; border-radius: 20px; box-shadow: var(--shadow);">
+        <form asp-action="GroupSettings" method="post">
+            <div asp-validation-summary="All" class="validation" role="alert"></div>
+            <div style="display:flex;flex-direction:column;gap:24px;">
+                <div style="padding: 20px; border: 1px solid var(--line); border-radius: 14px; background: var(--soft);">
+                    <label style="display:flex;align-items:center;gap:12px;font-size:15px;font-weight:700;cursor:pointer;margin:0;color:var(--ink);">
+                        <input type="checkbox" asp-for="GroupsFeatureEnabled" style="width:20px;height:20px;accent-color:var(--signal);" />
+                        <span>Enable / Disable entire Groups + Campus Pulse feature (Global Switch)</span>
+                    </label>
+                    <small style="display:block;color:var(--muted);margin-left:32px;margin-top:6px;font-size:12px;line-height:1.5;">
+                        When disabled, students can no longer access or create groups. Existing history remains safely stored.
+                    </small>
+                </div>
+
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
+                    <div>
+                        <label asp-for="MaxGroupSize" style="font-weight:700;font-size:12px;margin-bottom:6px;display:block;">Maximum Group Size Limit</label>
+                        <input asp-for="MaxGroupSize" type="number" class="form-control" min="2" max="20" required style="min-height:44px;" />
+                        <small style="color:var(--muted);font-size:11px;margin-top:4px;display:block;">Currently saved: <strong>@Model.MaxGroupSize</strong> (allowed range 2–20)</small>
+                    </div>
+                    <div>
+                        <label style="font-weight:700;font-size:12px;margin-bottom:6px;display:block;">AI Campus Pulse Insights</label>
+                        <label style="display:flex;align-items:center;gap:10px;padding:11px 14px;border:1px solid var(--line);border-radius:12px;background:var(--soft);font-size:12px;font-weight:650;cursor:pointer;margin:0;">
+                            <input type="checkbox" asp-for="EnableAiPulseOneLiners" style="width:18px;height:18px;accent-color:var(--signal);" />
+                            <span>Show AI One-Liner Pulse Insights</span>
+                        </label>
+                    </div>
+                </div>
+
+                <div style="padding: 20px; border: 1px solid var(--line); border-radius: 14px;">
+                    <label style="font-size:14px;font-weight:700;display:block;margin-bottom:12px;color:var(--ink);">Student Invitation Rules</label>
+                    <div style="display:flex;gap:24px;flex-wrap:wrap;">
+                        <label style="display:flex;align-items:center;gap:10px;font-size:13px;font-weight:600;cursor:pointer;margin:0;">
+                            <input type="checkbox" asp-for="AllowEmailInvites" style="width:18px;height:18px;accent-color:var(--signal);" />
+                            <span>Allow Direct Email Invites</span>
+                        </label>
+                        <label style="display:flex;align-items:center;gap:10px;font-size:13px;font-weight:600;cursor:pointer;margin:0;">
+                            <input type="checkbox" asp-for="AllowCodeInvites" style="width:18px;height:18px;accent-color:var(--signal);" />
+                            <span>Allow Shareable 8-Character Invite Codes</span>
+                        </label>
+                    </div>
+                </div>
+
+                <div>
+                    <label style="font-weight:700;font-size:12px;margin-bottom:6px;display:block;">System-wide Group Announcement Banner</label>
+                    <textarea asp-for="GroupAnnouncementTemplate" class="form-control" rows="3" placeholder="e.g. Exam week tip for groups: Split study snacks fairly and stay hydrated!" style="font-size:13px;border-radius:12px;"></textarea>
+                    <small style="color:var(--muted);font-size:11px;margin-top:4px;display:block;">Optional banner message displayed inside all student roommate group dashboards.</small>
+                </div>
+
+                <div style="display:flex;justify-content:flex-end;gap:12px;margin-top:8px;">
+                    <a asp-action="Groups" class="button secondary">Cancel</a>
+                    <button type="submit" class="button">Save Global System Controls</button>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:16px;">
+        <div class="panel" style="padding: 24px; border-radius: 20px; background: var(--panel);">
+            <h3 style="font-size:18px;font-weight:800;margin-top:0;margin-bottom:6px;">Event Code Generator</h3>
+            <p style="font-size:12px;color:var(--muted);margin-bottom:18px;line-height:1.5;">Generate temporary invite codes. Codes auto-disable when their validity ends.</p>
+
+            <form asp-action="GenerateEventInviteCode" method="post">
+                <div style="margin-bottom:14px;">
+                    <label style="font-weight:700;font-size:11px;margin-bottom:4px;display:block;">Campus Event Name</label>
+                    <input type="text" name="eventName" class="form-control" placeholder="e.g. Hackathon 2026" required style="min-height:40px;font-size:12px;" />
+                </div>
+                <div style="margin-bottom:18px;">
+                    <label style="font-weight:700;font-size:11px;margin-bottom:4px;display:block;">Validity (Days)</label>
+                    <input type="number" name="validityDays" class="form-control" value="7" min="1" max="90" required style="min-height:40px;font-size:12px;" />
+                </div>
+                <button type="submit" class="button full" style="margin-top:0;">Generate Event Code</button>
+            </form>
+        </div>
+
+        <div class="panel" style="padding: 20px; border-radius: 20px;">
+            <h3 style="font-size:15px;font-weight:800;margin:0 0 12px;">Generated codes</h3>
+            @if (eventCodes.Count == 0)
+            {
+                <p style="margin:0;font-size:12px;color:var(--muted);">No event codes yet.</p>
+            }
+            else
+            {
+                <div class="event-code-list">
+                    @foreach (var code in eventCodes)
+                    {
+                        var expired = code.ExpiresAt <= now;
+                        var active = code.IsActive && !expired;
+                        <div class="event-code-card @(active ? "is-active" : "is-off")">
+                            <div class="event-code-main">
+                                <strong>@code.Code</strong>
+                                <span>@code.EventName</span>
+                                <small>
+                                    @(expired ? "Expired" : (active ? "Active" : "Disabled"))
+                                    · ends @code.ExpiresAt.ToLocalTime().ToString("MMM d, yyyy")
+                                </small>
+                            </div>
+                            <div class="event-code-actions">
+                                @if (!expired)
+                                {
+                                    <form asp-action="ToggleEventInviteCode" asp-route-id="@code.Id" method="post">
+                                        @Html.AntiForgeryToken()
+                                        <button type="submit" class="button secondary small">@(active ? "Disable" : "Enable")</button>
+                                    </form>
+                                }
+                                <form asp-action="DeleteEventInviteCode" asp-route-id="@code.Id" method="post" data-confirm="Delete event code @code.Code?">
+                                    @Html.AntiForgeryToken()
+                                    <button type="submit" class="button secondary small" style="color:#ba4b43;border-color:rgba(186,75,67,.4);">Delete</button>
+                                </form>
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+    </div>
+</div>

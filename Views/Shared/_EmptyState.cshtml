@@ -1,0 +1,19 @@
+@{
+    var title = ViewData["EmptyTitle"] as string ?? "Nothing here yet.";
+    var body = ViewData["EmptyBody"] as string ?? "Add something to get started.";
+    var actionText = ViewData["EmptyActionText"] as string;
+    var actionController = ViewData["EmptyActionController"] as string;
+    var actionAction = ViewData["EmptyActionAction"] as string ?? "Edit";
+    var compact = ViewData["EmptyCompact"] as bool? == true;
+}
+<div class="empty-state @(compact ? "compact" : "")">
+    <span class="empty-mark" aria-hidden="true">
+        <svg viewBox="0 0 48 48" fill="none"><rect x="6" y="10" width="36" height="28" rx="8" stroke="currentColor" stroke-width="2"/><path d="M14 22h20M14 28h12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+    </span>
+    <h3>@title</h3>
+    <p>@body</p>
+    @if (!string.IsNullOrWhiteSpace(actionText) && !string.IsNullOrWhiteSpace(actionController))
+    {
+        <a class="button" asp-controller="@actionController" asp-action="@actionAction">@actionText</a>
+    }
+</div>

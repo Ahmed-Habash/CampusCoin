@@ -1,0 +1,10 @@
+{
+  "name": "Campus Coin",
+  "short_name": "Campus Coin",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f3f4ef",
+  "theme_color": "#08111f",
+  "description": "A calm money tracker made for student life.",
+  "icons": []
+}

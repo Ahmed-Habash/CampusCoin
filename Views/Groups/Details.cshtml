@@ -1,0 +1,509 @@
+@inject CampusCoin.Services.CurrencyService Currency
+@model CampusCoin.ViewModels.GroupDetailsViewModel
+@{
+    ViewData["Title"] = Model.Group.Name;
+    var userSettleUpNote = TempData["SettleUpSummary"] as string;
+}
+
+<div class="page-heading" style="margin-bottom:24px;">
+    <div>
+        <a asp-action="Index" class="back-link" style="margin-bottom:8px;">← Back to All Groups</a>
+        <div style="display:flex;align-items:center;gap:12px;margin-top:4px;">
+            <h1 style="font-size:32px;font-weight:800;margin:0;letter-spacing:-1px;">@Model.Group.Name</h1>
+            @if (Model.IsDisabled)
+            {
+                <span class="notice error" style="padding:3px 10px;margin:0;font-size:11px;font-weight:700;">Disabled</span>
+            }
+            else
+            {
+                <span class="pill" style="background:rgba(121,242,199,0.15);color:var(--signal);font-weight:700;padding:4px 10px;">Active Group</span>
+            }
+        </div>
+        <p style="color:var(--muted);font-size:13px;margin-top:6px;">
+            Invite Code: <strong style="color:var(--signal);letter-spacing:1px;font-family:monospace;font-size:14px;">@Model.Group.InviteCode</strong> · Created @Model.Group.CreatedAt.ToString("MMM dd, yyyy") by @Model.Group.Creator.FullName
+        </p>
+    </div>
+    <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+        @if (!Model.IsDisabled)
+        {
+            <button class="button" onclick="document.getElementById('addExpenseModal').style.display='flex'">＋ Log Shared Expense</button>
+            @if (Model.SystemSettings.AllowEmailInvites && Model.JoinedMemberCount < Model.SystemSettings.MaxGroupSize)
+            {
+                <button class="button secondary" onclick="document.getElementById('inviteModal').style.display='flex'">✉ Invite Member</button>
+            }
+        }
+        <form asp-action="SettleUp" asp-route-id="@Model.Group.Id" method="post" style="display:inline;">
+            <button type="submit" class="button secondary" style="border-color:var(--signal);color:var(--signal);">🤝 Settle Up Note</button>
+        </form>
+        @if (Model.Balances.Any(m => m.UserId == User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value))
+        {
+            var leaveWarn = Model.JoinedMemberCount <= 1
+                ? "You are the last member. Leaving will permanently delete this group and its shared expenses. Continue?"
+                : "Leave this group? You will no longer see its bills or chat.";
+            <form asp-action="Leave" asp-route-id="@Model.Group.Id" method="post" style="display:inline;" onsubmit="return confirm('@leaveWarn');">
+                <button type="submit" class="button secondary" style="border-color:#ba4b43;color:#ba4b43;">Leave Group</button>
+            </form>
+        }
+        <button type="button" class="button secondary small" style="border-color:#ba4b43;color:#ba4b43;" onclick="document.getElementById('reportModal').style.display='flex'">🚩 Report Group</button>
+        @if (User.IsInRole("Administrator"))
+        {
+            <form asp-controller="Admin" asp-action="ForceSettleGroup" asp-route-id="@Model.Group.Id" method="post" style="display:inline;">
+                <button type="submit" class="button small secondary" style="border-color:#eab308;color:#eab308;" onclick="return confirm('Force settle all group balances as Administrator?');">⚡ Admin Force Settle</button>
+            </form>
+        }
+    </div>
+</div>
+
+@if (!string.IsNullOrEmpty(userSettleUpNote))
+{
+    <div class="panel" style="padding:24px;margin-bottom:28px;border:1px solid var(--signal);background:rgba(121,242,199,0.05);border-radius:16px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+            <strong style="color:var(--signal);font-size:16px;font-weight:700;">🤝 Generated Settle Up Summary Note</strong>
+            <button class="button secondary small" onclick="navigator.clipboard.writeText(document.getElementById('settleNoteBox').innerText);alert('Copied summary note to clipboard!');">📋 Copy Note Text</button>
+        </div>
+        <pre id="settleNoteBox" style="background:var(--bg);padding:16px;border-radius:10px;font-family:monospace;white-space:pre-wrap;margin:0;color:var(--ink);border:1px solid var(--line);font-size:12px;line-height:1.5;">@userSettleUpNote</pre>
+    </div>
+}
+
+<!-- Campus Pulse Insights Panel -->
+<div class="panel" style="margin-bottom:28px;background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:24px;box-shadow:var(--shadow);">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;">
+        <span style="font-size:24px;line-height:1;">⚡</span>
+        <div>
+            <h3 style="margin:0;font-size:18px;font-weight:800;letter-spacing:-0.5px;">Campus Pulse Insights</h3>
+            <p style="color:var(--muted);font-size:12px;margin:2px 0 0;">Anonymized spending trends &amp; smart suggestions for your group.</p>
+        </div>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(240px, 1fr));gap:16px;">
+        <div style="background:var(--soft);padding:16px;border-radius:12px;">
+            <span class="tiny-label" style="color:var(--muted);letter-spacing:1px;">MONTHLY TREND</span>
+            <p style="margin:8px 0 0;font-size:14px;font-weight:700;color:var(--ink);line-height:1.4;">@Model.Pulse.SpendingTrendText</p>
+        </div>
+        <div style="background:var(--soft);padding:16px;border-radius:12px;">
+            <span class="tiny-label" style="color:var(--muted);letter-spacing:1px;">TOP CATEGORY</span>
+            <p style="margin:8px 0 0;font-size:14px;font-weight:700;color:var(--ink);line-height:1.4;">@Model.Pulse.TopCategoryText</p>
+        </div>
+        <div style="background:rgba(121,242,199,0.08);padding:16px;border-radius:12px;border:1px solid rgba(121,242,199,0.2);">
+            <span class="tiny-label" style="color:var(--signal);letter-spacing:1px;">AI PULSE ONE-LINER</span>
+            <p style="margin:8px 0 0;font-size:13px;font-style:italic;color:var(--ink);line-height:1.4;">“@Model.Pulse.AiOneLiner”</p>
+        </div>
+    </div>
+</div>
+
+<div style="display:grid;grid-template-columns:300px 1fr;gap:24px;margin-bottom:36px;align-items:start;">
+    <!-- Left Column: Balances Summary & Member Discussion Chat -->
+    <div style="display:flex;flex-direction:column;gap:24px;">
+        <div class="panel" style="padding:24px;border-radius:16px;">
+            <h3 style="font-size:16px;font-weight:700;margin-bottom:18px;display:flex;justify-content:space-between;align-items:center;">
+                <span>👥 Members (@Model.JoinedMemberCount/@Model.SystemSettings.MaxGroupSize)</span>
+            </h3>
+            <div style="display:flex;flex-direction:column;gap:12px;">
+                @foreach (var b in Model.Balances)
+                {
+                    <div style="background:var(--soft);padding:14px;border-radius:12px;display:flex;flex-direction:column;gap:8px;">
+                        <div>
+                            <strong style="font-size:14px;color:var(--ink);">@b.FullName</strong>
+                            <small style="display:block;color:var(--muted);font-size:11px;">@b.Email</small>
+                        </div>
+                        <div style="display:flex;justify-content:space-between;align-items:center;padding-top:6px;border-top:1px solid var(--line);">
+                            <span style="font-size:11px;color:var(--muted);">Net Balance</span>
+                            @{
+                                var net = b.NetBalanceCents;
+                                var netLabel = net == 0 ? "Settled" : (net > 0 ? "Is owed" : "Owes");
+                                var netColor = net == 0 ? "var(--muted)" : (net > 0 ? "#087557" : "#ba4b43");
+                            }
+                            <strong style="font-size:13px;color:@netColor;">@netLabel (@Currency.Format(Math.Abs(net)))</strong>
+                        </div>
+                    </div>
+                }
+            </div>
+            @if (Model.PendingInvites.Count > 0)
+            {
+                <div style="margin-top:20px;padding-top:16px;border-top:1px dashed var(--line);">
+                    <h4 style="font-size:12px;font-weight:800;letter-spacing:.4px;text-transform:uppercase;color:var(--muted);margin:0 0 10px;">Waiting to join</h4>
+                    <div style="display:flex;flex-direction:column;gap:8px;">
+                        @foreach (var invite in Model.PendingInvites)
+                        {
+                            <div style="padding:10px 12px;border-radius:10px;border:1px dashed var(--line);background:rgba(8,17,31,.02);">
+                                <strong style="font-size:13px;color:var(--ink);">@invite.FullName</strong>
+                                <small style="display:block;color:var(--muted);font-size:11px;">@invite.Email · invited — joins with the group code</small>
+                            </div>
+                        }
+                    </div>
+                </div>
+            }
+        </div>
+
+    </div>
+
+    <!-- Right Column: Recent Shared Expenses -->
+    <div class="panel" style="padding:24px;border-radius:16px;">
+        <h3 style="font-size:16px;font-weight:700;margin-bottom:18px;">🧾 Shared Expense History</h3>
+
+        @if (!Model.Expenses.Any())
+        {
+            <div class="empty-state" style="padding:40px 20px;">
+                <p style="color:var(--muted);font-size:13px;margin:0;">No shared expenses logged yet in this group.</p>
+                <button class="button small" style="margin-top:12px;" onclick="document.getElementById('addExpenseModal').style.display='flex'">＋ Log First Expense</button>
+            </div>
+        }
+        else
+        {
+            <div class="table-scroll">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Title</th>
+                            <th>Payer</th>
+                            <th>Category / Tag</th>
+                            <th style="text-align:right;">Amount</th>
+                            <th>Participants</th>
+                            @if (!Model.IsDisabled || Model.IsAdministratorViewer)
+                            {
+                                <th></th>
+                            }
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var exp in Model.Expenses)
+                        {
+                            <tr>
+                                <td>
+                                    <strong style="font-size:13px;color:var(--ink);">@exp.Title</strong>
+                                    <span class="date-cell" style="display:block;margin-top:2px;">@exp.CreatedAt.ToString("MMM dd, yyyy HH:mm")</span>
+                                </td>
+                                <td><span style="font-size:12px;font-weight:600;">@exp.PayerName</span></td>
+                                <td>
+                                    <span class="pill">@exp.Category</span>
+                                    @if (!string.IsNullOrEmpty(exp.Tag) && exp.Tag != "Personal")
+                                    {
+                                        <span class="pill" style="background:var(--signal);color:#08111f;font-weight:700;margin-left:4px;">🏷️ @exp.Tag</span>
+                                    }
+                                </td>
+                                <td style="text-align:right;"><strong style="font-size:14px;color:var(--ink);">@Currency.Format(exp.AmountCents)</strong></td>
+                                <td>
+                                    <small style="color:var(--muted);font-size:11px;">
+                                        Split among (@exp.ParticipantNames.Count): @string.Join(", ", exp.ParticipantNames)
+                                    </small>
+                                </td>
+                                @if (!Model.IsDisabled || Model.IsAdministratorViewer)
+                                {
+                                    <td>
+                                        <div style="display:flex;flex-wrap:wrap;gap:6px;justify-content:flex-end;">
+                                            <button type="button" class="button secondary small"
+                                                    data-edit-expense
+                                                    data-id="@exp.Id"
+                                                    data-title="@exp.Title"
+                                                    data-amount="@((exp.AmountCents / 100m).ToString("0.00", System.Globalization.CultureInfo.InvariantCulture))"
+                                                    data-category="@exp.Category"
+                                                    data-tag="@(string.IsNullOrEmpty(exp.Tag) ? "Personal" : exp.Tag)"
+                                                    data-participants="@System.Text.Json.JsonSerializer.Serialize(exp.ParticipantUserIds)">Edit</button>
+                                            <form asp-action="DeleteExpense" asp-route-expenseId="@exp.Id" method="post" style="display:inline;" onsubmit="return confirm('Remove this shared expense? Balances will update.');">
+                                                <input type="hidden" name="groupId" value="@Model.Group.Id" />
+                                                <button type="submit" class="button secondary small" style="border-color:#ba4b43;color:#ba4b43;">Remove</button>
+                                            </form>
+                                        </div>
+                                    </td>
+                                }
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </div>
+</div>
+
+@{
+    var currentUserId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+    var canPostAsAdminOnly = Model.IsAdministratorViewer && !Model.Balances.Any(m => m.UserId == currentUserId);
+}
+<section class="group-chat-panel panel" aria-label="Group chat">
+    <header class="group-chat-header">
+        <div>
+            <h2>Group Chat</h2>
+            <p>Talk with your roommates about bills, splits, and plans.</p>
+        </div>
+        <div class="group-chat-header-tags">
+            <span class="pill">Roommates</span>
+            @if (Model.IsAdministratorViewer)
+            {
+                <span class="pill" style="background:rgba(234,179,8,0.2);color:#a16207;font-weight:800;">Admin can post</span>
+            }
+            <span class="group-chat-count">@Model.ChatMessages.Count messages</span>
+        </div>
+    </header>
+    <div id="groupChatContainer" class="group-chat-thread">
+        @if (!Model.ChatMessages.Any())
+        {
+            <div class="group-chat-empty">
+                <strong>Start the conversation</strong>
+                <p>No messages yet. Say hi to your group!</p>
+            </div>
+        }
+        else
+        {
+            @foreach (var msg in Model.ChatMessages)
+            {
+                var isAdminMsg = Model.AdministratorUserIds.Contains(msg.UserId);
+                var isMine = msg.UserId == currentUserId;
+                <div class="group-chat-row @(isMine ? "is-mine" : "is-theirs")" data-msg-id="@msg.Id">
+                    <div class="group-chat-bubble @(isAdminMsg ? "group-chat-admin" : "") @(isMine ? "is-mine" : "")">
+                        <div class="group-chat-meta">
+                            <strong>
+                                @(isMine ? "You" : (msg.User?.FullName ?? "Member"))
+                                @if (isAdminMsg)
+                                {
+                                    <span class="group-chat-admin-badge">ADMIN</span>
+                                }
+                                @if (msg.EditedAt != null)
+                                {
+                                    <span class="group-chat-edited">edited</span>
+                                }
+                            </strong>
+                            <time>@msg.SentAt.ToLocalTime().ToString("MMM d · HH:mm")</time>
+                        </div>
+                        <p class="group-chat-text">@msg.Message</p>
+                        @if (isMine)
+                        {
+                            <div class="group-chat-actions">
+                                @if (msg.CanEdit)
+                                {
+                                    <button type="button" class="group-chat-action" data-edit-msg="@msg.Id">Edit</button>
+                                }
+                                <form asp-action="DeleteChatMessage" asp-route-id="@Model.Group.Id" asp-route-messageId="@msg.Id" method="post" class="group-chat-delete-form" data-confirm="Delete this message?">
+                                    @Html.AntiForgeryToken()
+                                    <button type="submit" class="group-chat-action is-danger">Delete</button>
+                                </form>
+                            </div>
+                            @if (msg.CanEdit)
+                            {
+                                <form asp-action="EditChatMessage" asp-route-id="@Model.Group.Id" asp-route-messageId="@msg.Id" method="post" class="group-chat-edit-form" hidden data-edit-form="@msg.Id">
+                                    @Html.AntiForgeryToken()
+                                    <input type="text" name="message" maxlength="1000" value="@msg.Message" required />
+                                    <div class="group-chat-edit-actions">
+                                        <button type="button" class="button secondary small" data-cancel-edit="@msg.Id">Cancel</button>
+                                        <button type="submit" class="button small">Save</button>
+                                    </div>
+                                </form>
+                            }
+                        }
+                    </div>
+                </div>
+            }
+        }
+    </div>
+    @if (!Model.IsDisabled || Model.IsAdministratorViewer)
+    {
+        <form asp-action="PostChatMessage" asp-route-id="@Model.Group.Id" method="post" class="group-chat-composer">
+            <input type="text" name="message" maxlength="1000" placeholder="@(canPostAsAdminOnly ? "Post as administrator…" : "Write a message…")" required autocomplete="off" />
+            <button type="submit" class="button">Send</button>
+        </form>
+    }
+</section>
+
+<!-- Modal: Log Shared Expense -->
+<div id="addExpenseModal" class="permission-modal-backdrop" style="display:none;" onclick="if(event.target===this)this.style.display='none'">
+    <div class="permission-modal-card panel" style="width:100%;max-width:500px;padding:28px;border-radius:18px;">
+        <h3 style="font-size:20px;font-weight:800;margin-bottom:16px;">🧾 Log Shared Expense</h3>
+        <form asp-action="AddExpense" method="post">
+            <input type="hidden" name="GroupId" value="@Model.Group.Id" />
+            <div class="form-group" style="margin-bottom:16px;">
+                <label style="font-weight:600;font-size:12px;margin-bottom:6px;">Expense Title / Description</label>
+                <input type="text" name="Title" class="form-control" placeholder="e.g. Pizza night, Wi-Fi bill, Lab Project components" required maxlength="160" />
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:16px;">
+                <div class="form-group">
+                    <label style="font-weight:600;font-size:12px;margin-bottom:6px;">Amount (@Currency.Symbol)</label>
+                    <input type="number" step="0.01" name="Amount" class="form-control" placeholder="800.00" required min="0.01" />
+                </div>
+                <div class="form-group">
+                    <label style="font-weight:600;font-size:12px;margin-bottom:6px;">Category</label>
+                    <select name="Category" class="form-control">
+                        <option value="Food">Food / Canteen</option>
+                        <option value="Hostel">Hostel & Rent</option>
+                        <option value="Transport">Transport</option>
+                        <option value="Entertainment">Entertainment</option>
+                        <option value="General">General</option>
+                    </select>
+                </div>
+            </div>
+            <div class="form-group" style="margin-bottom:16px;">
+                <label style="font-weight:600;font-size:12px;margin-bottom:6px;">Event / Project Tag (Optional)</label>
+                <select name="Tag" class="form-control">
+                    <option value="Personal">Personal / Daily</option>
+                    <option value="Group Project">Group Project</option>
+                    <option value="Campus Event">Campus Event</option>
+                    <option value="Fest">College Fest</option>
+                </select>
+            </div>
+            <div class="form-group" style="margin-bottom:20px;">
+                <label style="font-weight:600;font-size:12px;margin-bottom:6px;">Split Among Members (Select participants)</label>
+                <div style="max-height:140px;overflow-y:auto;background:var(--soft);padding:12px;border-radius:10px;display:flex;flex-direction:column;gap:8px;">
+                    @foreach (var m in Model.Balances)
+                    {
+                        <label style="display:flex;align-items:center;gap:10px;font-size:13px;cursor:pointer;margin:0;">
+                            <input type="checkbox" name="ParticipantUserIds" value="@m.UserId" checked style="width:16px;height:16px;" />
+                            <span>@m.FullName (@m.Email)</span>
+                        </label>
+                    }
+                </div>
+            </div>
+            <div style="display:flex;justify-content:flex-end;gap:10px;">
+                <button type="button" class="button secondary" onclick="document.getElementById('addExpenseModal').style.display='none'">Cancel</button>
+                <button type="submit" class="button">Log Expense</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Modal: Edit Shared Expense -->
+<div id="editExpenseModal" class="permission-modal-backdrop" style="display:none;" onclick="if(event.target===this)this.style.display='none'">
+    <div class="permission-modal-card panel" style="width:100%;max-width:500px;padding:28px;border-radius:18px;">
+        <h3 style="font-size:20px;font-weight:800;margin-bottom:16px;">Edit Shared Expense</h3>
+        <form asp-action="EditExpense" method="post">
+            <input type="hidden" name="GroupId" value="@Model.Group.Id" />
+            <input type="hidden" name="ExpenseId" id="edit-expense-id" value="0" />
+            <div class="form-group" style="margin-bottom:16px;">
+                <label style="font-weight:600;font-size:12px;margin-bottom:6px;">Expense Title / Description</label>
+                <input type="text" name="Title" id="edit-expense-title" class="form-control" required maxlength="160" />
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:16px;">
+                <div class="form-group">
+                    <label style="font-weight:600;font-size:12px;margin-bottom:6px;">Amount (@Currency.Symbol)</label>
+                    <input type="number" step="0.01" name="Amount" id="edit-expense-amount" class="form-control" required min="0.01" />
+                </div>
+                <div class="form-group">
+                    <label style="font-weight:600;font-size:12px;margin-bottom:6px;">Category</label>
+                    <select name="Category" id="edit-expense-category" class="form-control">
+                        <option value="Food">Food / Canteen</option>
+                        <option value="Hostel">Hostel & Rent</option>
+                        <option value="Transport">Transport</option>
+                        <option value="Entertainment">Entertainment</option>
+                        <option value="General">General</option>
+                    </select>
+                </div>
+            </div>
+            <div class="form-group" style="margin-bottom:16px;">
+                <label style="font-weight:600;font-size:12px;margin-bottom:6px;">Event / Project Tag (Optional)</label>
+                <select name="Tag" id="edit-expense-tag" class="form-control">
+                    <option value="Personal">Personal / Daily</option>
+                    <option value="Group Project">Group Project</option>
+                    <option value="Campus Event">Campus Event</option>
+                    <option value="Fest">College Fest</option>
+                </select>
+            </div>
+            <div class="form-group" style="margin-bottom:20px;">
+                <label style="font-weight:600;font-size:12px;margin-bottom:6px;">Split Among Members (Select participants)</label>
+                <div style="max-height:140px;overflow-y:auto;background:var(--soft);padding:12px;border-radius:10px;display:flex;flex-direction:column;gap:8px;">
+                    @foreach (var m in Model.Balances)
+                    {
+                        <label style="display:flex;align-items:center;gap:10px;font-size:13px;cursor:pointer;margin:0;">
+                            <input type="checkbox" name="ParticipantUserIds" value="@m.UserId" class="edit-expense-participant" style="width:16px;height:16px;" />
+                            <span>@m.FullName (@m.Email)</span>
+                        </label>
+                    }
+                </div>
+            </div>
+            <div style="display:flex;justify-content:flex-end;gap:10px;">
+                <button type="button" class="button secondary" onclick="document.getElementById('editExpenseModal').style.display='none'">Cancel</button>
+                <button type="submit" class="button">Save Changes</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Modal: Invite Member by Email -->
+<div id="inviteModal" class="permission-modal-backdrop" style="display:none;" onclick="if(event.target===this)this.style.display='none'">
+    <div class="permission-modal-card panel" style="width:100%;max-width:460px;padding:28px;border-radius:18px;">
+        <h3 style="font-size:20px;font-weight:800;margin-bottom:16px;">✉ Invite Member by Email</h3>
+        <form asp-action="InviteMember" method="post">
+            <input type="hidden" name="GroupId" value="@Model.Group.Id" />
+            <div class="form-group" style="margin-bottom:20px;">
+                <label style="font-weight:600;font-size:12px;margin-bottom:6px;">Student Email Address</label>
+                <input type="email" name="Email" class="form-control" placeholder="friend@campuscoin.local" required />
+            </div>
+            <div style="display:flex;justify-content:flex-end;gap:10px;">
+                <button type="button" class="button secondary" onclick="document.getElementById('inviteModal').style.display='none'">Cancel</button>
+                <button type="submit" class="button">Add Member</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Modal: Report Group -->
+<div id="reportModal" class="permission-modal-backdrop" style="display:none;" onclick="if(event.target===this)this.style.display='none'">
+    <div class="permission-modal-card panel" style="width:100%;max-width:460px;padding:28px;border-radius:18px;">
+        <h3 style="font-size:20px;font-weight:800;margin-bottom:6px;color:#ba4b43;">🚩 Report Group</h3>
+        <p style="font-size:12px;color:var(--muted);margin-bottom:16px;">Flag inappropriate group content or behavior for system admin review.</p>
+        <form asp-action="ReportGroup" asp-route-id="@Model.Group.Id" method="post">
+            <div class="form-group" style="margin-bottom:20px;">
+                <label style="font-weight:600;font-size:12px;margin-bottom:6px;">Reason for Report</label>
+                <textarea name="reason" class="form-control" rows="3" placeholder="Describe the issue or reason for reporting..." required></textarea>
+            </div>
+            <div style="display:flex;justify-content:flex-end;gap:10px;">
+                <button type="button" class="button secondary" onclick="document.getElementById('reportModal').style.display='none'">Cancel</button>
+                <button type="submit" class="button" style="background:#ba4b43;border-color:#ba4b43;color:#fff;">Submit Report</button>
+            </div>
+        </form>
+    </div>
+</div>
+<script>
+(() => {
+    const thread = document.getElementById('groupChatContainer');
+    if (thread) thread.scrollTop = thread.scrollHeight;
+
+    document.querySelectorAll('[data-edit-msg]').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const id = btn.getAttribute('data-edit-msg');
+            const row = btn.closest('[data-msg-id]');
+            if (!row) return;
+            const form = row.querySelector(`[data-edit-form="${id}"]`);
+            const text = row.querySelector('.group-chat-text');
+            const actions = row.querySelector('.group-chat-actions');
+            if (!form) return;
+            form.hidden = false;
+            if (text) text.hidden = true;
+            if (actions) actions.hidden = true;
+            form.querySelector('input[name="message"]')?.focus();
+        });
+    });
+    document.querySelectorAll('[data-cancel-edit]').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const id = btn.getAttribute('data-cancel-edit');
+            const row = btn.closest('[data-msg-id]');
+            if (!row) return;
+            const form = row.querySelector(`[data-edit-form="${id}"]`);
+            const text = row.querySelector('.group-chat-text');
+            const actions = row.querySelector('.group-chat-actions');
+            if (form) form.hidden = true;
+            if (text) text.hidden = false;
+            if (actions) actions.hidden = false;
+        });
+    });
+
+    document.querySelectorAll('[data-edit-expense]').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const modal = document.getElementById('editExpenseModal');
+            if (!modal) return;
+            const id = document.getElementById('edit-expense-id');
+            const title = document.getElementById('edit-expense-title');
+            const amount = document.getElementById('edit-expense-amount');
+            const category = document.getElementById('edit-expense-category');
+            const tag = document.getElementById('edit-expense-tag');
+            if (id) id.value = btn.getAttribute('data-id') || '0';
+            if (title) title.value = btn.getAttribute('data-title') || '';
+            if (amount) amount.value = btn.getAttribute('data-amount') || '';
+            if (category) category.value = btn.getAttribute('data-category') || 'Food';
+            if (tag) tag.value = btn.getAttribute('data-tag') || 'Personal';
+            let ids = [];
+            try { ids = JSON.parse(btn.getAttribute('data-participants') || '[]'); } catch { ids = []; }
+            modal.querySelectorAll('.edit-expense-participant').forEach(cb => {
+                cb.checked = ids.includes(cb.value);
+            });
+            modal.style.display = 'flex';
+        });
+    });
+})();
+</script>
+

@@ -1,0 +1,158 @@
+@model List<Announcement>
+@{
+    ViewData["Title"] = "Platform Announcements";
+    var now = DateTime.UtcNow;
+    var active = Model.Where(a => a.IsActive && (a.ExpiresAt == null || a.ExpiresAt > now)).OrderByDescending(a => a.CreatedAt).ToList();
+    var past = Model.Where(a => !a.IsActive || (a.ExpiresAt != null && a.ExpiresAt <= now)).OrderByDescending(a => a.CreatedAt).ToList();
+}
+
+<div class="page-heading">
+    <div>
+        <span class="eyebrow">BROADCAST SYSTEM</span>
+        <h1>Announcements</h1>
+        <p>Publish timed platform reminders. Expired items stay in the past record.</p>
+    </div>
+</div>
+
+<div class="panel" style="margin-bottom: 24px;">
+    <h3>Create New Announcement</h3>
+    <form method="post" asp-controller="Admin" asp-action="CreateAnnouncement" style="display: grid; gap: 14px; margin-top: 14px;">
+        @Html.AntiForgeryToken()
+        <div>
+            <label for="Title" style="margin-top:0;">Title</label>
+            <input type="text" id="Title" name="Title" placeholder="e.g. Monthly Budget Reminder, Platform Maintenance..." required maxlength="120" />
+        </div>
+        <div>
+            <label for="Message" style="margin-top:0;">Message</label>
+            <textarea id="Message" name="Message" rows="3" placeholder="Write your announcement content..." style="width:100%; border-radius:10px; border:1px solid var(--line); padding:10px; background:var(--panel); color:var(--ink);" required></textarea>
+        </div>
+        <div style="display:grid;grid-template-columns:120px 1fr;gap:12px;align-items:end;">
+            <div>
+                <label for="DurationAmount" style="margin-top:0;">Available for</label>
+                <input type="number" id="DurationAmount" name="DurationAmount" min="1" max="3650" value="7" required />
+            </div>
+            <div>
+                <label for="DurationUnit" style="margin-top:0;">Unit</label>
+                <select id="DurationUnit" name="DurationUnit">
+                    <option value="Minutes">Minutes</option>
+                    <option value="Hours">Hours</option>
+                    <option value="Days" selected>Days</option>
+                    <option value="Months">Months</option>
+                </select>
+            </div>
+        </div>
+        <small class="field-help" style="margin:0;">After this time the announcement stops showing on student dashboards and moves to Past Announcements.</small>
+        <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap:wrap; gap:10px;">
+            <label class="checkbox" style="margin:0;">
+                <input type="checkbox" name="IsActive" value="true" checked /> Publish immediately as Active
+            </label>
+            <button type="submit" class="button">Publish Announcement</button>
+        </div>
+    </form>
+</div>
+
+<div class="panel" style="margin-bottom: 24px;">
+    <div class="panel-heading" style="margin-bottom:12px;">
+        <h2>Active Announcements</h2>
+        <span class="pill">@active.Count live</span>
+    </div>
+    @if (active.Count == 0)
+    {
+        <p class="muted">No active announcements right now.</p>
+    }
+    else
+    {
+        <div style="display: grid; gap: 14px; margin-top: 8px;">
+            @foreach (var a in active)
+            {
+                <div data-ajax-item style="padding: 16px; border: 1px solid var(--line); border-radius: 14px; background: var(--panel); display: flex; justify-content: space-between; align-items: flex-start; gap:12px; flex-wrap:wrap;">
+                    <div>
+                        <div style="display: flex; align-items: center; gap: 10px; flex-wrap:wrap;">
+                            <strong style="font-size: 16px;">@a.Title</strong>
+                            <span class="pill" data-status-pill style="background: var(--signal); color: #08111f;">Active</span>
+                        </div>
+                        <p style="margin: 8px 0 4px; font-size: 13px; color: var(--muted);">@a.Message</p>
+                        <small style="color: var(--muted); font-size: 10px;">
+                            Created @a.CreatedAt.ToLocalTime().ToString("MMM dd, yyyy HH:mm")
+                            @if (a.ExpiresAt.HasValue)
+                            {
+                                <text> · Ends @a.ExpiresAt.Value.ToLocalTime().ToString("MMM dd, yyyy HH:mm")</text>
+                            }
+                        </small>
+                    </div>
+                    <div style="display: flex; gap: 8px;">
+                        <form method="post" asp-controller="Admin" asp-action="ToggleAnnouncement" asp-route-id="@a.Id" data-admin-ajax>
+                            @Html.AntiForgeryToken()
+                            <button type="submit" class="button small secondary" data-toggle-label>Deactivate</button>
+                        </form>
+                        <form method="post" asp-controller="Admin" asp-action="DeleteAnnouncement" asp-route-id="@a.Id" data-admin-ajax data-ajax-remove data-confirm="Delete announcement '@a.Title'?">
+                            @Html.AntiForgeryToken()
+                            <button type="submit" class="button small secondary" style="border-color: #ba4b43; color: #ba4b43;">Delete</button>
+                        </form>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</div>
+
+<div class="panel">
+    <div class="panel-heading" style="margin-bottom:12px;">
+        <h2>Past Announcements</h2>
+        <span class="pill" style="background:var(--soft);color:var(--muted);">@past.Count record@(past.Count == 1 ? "" : "s")</span>
+    </div>
+    @if (past.Count == 0)
+    {
+        <p class="muted">No past announcements yet. Expired or deactivated items appear here.</p>
+    }
+    else
+    {
+        <div style="display: grid; gap: 14px; margin-top: 8px;">
+            @foreach (var a in past)
+            {
+                var expired = a.ExpiresAt.HasValue && a.ExpiresAt <= now;
+                <div data-ajax-item style="padding: 16px; border: 1px solid var(--line); border-radius: 14px; background: var(--panel); display: flex; justify-content: space-between; align-items: flex-start; gap:12px; flex-wrap:wrap; opacity:.92;">
+                    <div>
+                        <div style="display: flex; align-items: center; gap: 10px; flex-wrap:wrap;">
+                            <strong style="font-size: 16px;">@a.Title</strong>
+                            <span class="pill" style="background: var(--soft); color: var(--muted);">@(expired ? "Expired" : "Inactive")</span>
+                        </div>
+                        <p style="margin: 8px 0 4px; font-size: 13px; color: var(--muted);">@a.Message</p>
+                        <small style="color: var(--muted); font-size: 10px;">
+                            Created @a.CreatedAt.ToLocalTime().ToString("MMM dd, yyyy HH:mm")
+                            @if (a.ExpiresAt.HasValue)
+                            {
+                                <text> · Ended @a.ExpiresAt.Value.ToLocalTime().ToString("MMM dd, yyyy HH:mm")</text>
+                            }
+                        </small>
+                    </div>
+                    <div style="display: flex; gap: 8px;">
+                        @if (!expired)
+                        {
+                            <form method="post" asp-controller="Admin" asp-action="ToggleAnnouncement" asp-route-id="@a.Id" data-admin-ajax>
+                                @Html.AntiForgeryToken()
+                                <button type="submit" class="button small secondary">Reactivate</button>
+                            </form>
+                        }
+                        <form method="post" asp-controller="Admin" asp-action="DeleteAnnouncement" asp-route-id="@a.Id" data-admin-ajax data-ajax-remove data-confirm="Delete announcement '@a.Title'?">
+                            @Html.AntiForgeryToken()
+                            <button type="submit" class="button small secondary" style="border-color: #ba4b43; color: #ba4b43;">Delete</button>
+                        </form>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</div>
+
+@section Scripts {
+<script>
+document.addEventListener('admin:ajax-success', (e) => {
+    const form = e.target;
+    if (!(form instanceof HTMLFormElement)) return;
+    if (!form.action.includes('/toggle')) return;
+    // Soft reload so Active/Past sections stay accurate after toggle.
+    location.reload();
+});
+</script>
+}

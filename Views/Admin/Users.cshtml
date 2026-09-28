@@ -1,0 +1,427 @@
+@model List<AdminUserItemViewModel>
+@{
+    ViewData["Title"] = "User Management";
+    var currentAdmin = ViewBag.CurrentAdmin as ApplicationUser;
+    bool canDisable = currentAdmin?.CanDisableUsers == true;
+    bool canManagePerms = currentAdmin?.CanManagePermissions == true;
+}
+
+<div class="page-heading" data-admin-users-page>
+    <div>
+        <span class="eyebrow">USER MANAGEMENT</span>
+        <h1>Registered Users</h1>
+        <p>View, search, assign admin tasks, enable or disable accounts, and grant administrator access.</p>
+    </div>
+</div>
+<script>
+document.body.dataset.canDisable = '@(canDisable ? "true" : "false")';
+document.body.dataset.canManagePerms = '@(canManagePerms ? "true" : "false")';
+</script>
+
+<div class="data-tools" style="margin-bottom: 20px;">
+    <form method="get" asp-controller="Admin" asp-action="Users" style="display: flex; gap: 10px; width: 100%; max-width: 500px;">
+        <input type="text" name="q" value="@ViewBag.SearchQuery" placeholder="Search by name or email…" style="flex: 1; min-height: 40px;" />
+        <button type="submit" class="button small">Search</button>
+        @if (!string.IsNullOrWhiteSpace(ViewBag.SearchQuery as string))
+        {
+            <a asp-controller="Admin" asp-action="Users" class="button secondary small">Clear</a>
+        }
+    </form>
+</div>
+
+@{
+    var admins = Model.Where(u => u.Role == "Administrator").ToList();
+    var students = Model.Where(u => u.Role != "Administrator").ToList();
+    var pendingApps = ViewBag.PendingApplications as List<CampusCoin.Models.AdminApplication> ?? new List<CampusCoin.Models.AdminApplication>();
+}
+
+@if (pendingApps.Any() && canManagePerms)
+{
+    <div class="panel" style="margin-bottom: 24px; border: 1px solid var(--signal); background: rgba(121, 242, 199, 0.04); border-radius: 18px; padding: 20px;">
+        <div class="panel-heading" style="margin-bottom: 14px;">
+            <div>
+                <h2 style="font-size: 16px; font-weight: 800; color: var(--ink);">Pending Administrator Access Requests</h2>
+                <p style="font-size: 12px; color: var(--muted); margin-top: 2px;">Students requesting administrator permissions for campus management.</p>
+            </div>
+            <span class="pill danger" style="background: rgba(186, 75, 67, 0.15); color: #ba4b43; font-weight: 700;">@pendingApps.Count Pending</span>
+        </div>
+        <div style="display: grid; gap: 12px;">
+            @foreach (var app in pendingApps)
+            {
+                <div data-ajax-item style="display: flex; justify-content: space-between; align-items: center; padding: 14px 18px; background: var(--panel); border: 1px solid var(--line); border-radius: 12px; gap: 12px; flex-wrap: wrap;">
+                    <div>
+                        <strong style="font-size: 13px; color: var(--ink);">@app.User.FullName (@app.User.Email)</strong>
+                        <small style="display: block; color: var(--muted); font-size: 11px; margin-top: 2px;">Reason: "@app.Reason"</small>
+                        <small style="display: block; color: var(--muted); font-size: 10px; margin-top: 2px;">Applied: @app.AppliedAt.ToString("MMM dd, yyyy HH:mm")</small>
+                    </div>
+                    <div style="display: flex; flex-direction:column; gap: 10px; min-width:min(100%,320px);">
+                        <form method="post" action="/admin/admin-applications/@app.Id/approve" data-admin-ajax data-ajax-remove data-ajax-reload data-ajax-silent style="display:grid;gap:8px;">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="canDisableUsers" value="false" />
+                            <input type="hidden" name="canManageCategories" value="false" />
+                            <input type="hidden" name="canManageAnnouncements" value="false" />
+                            <input type="hidden" name="canManageTipTemplates" value="false" />
+                            <div style="display:grid;gap:6px;padding:10px 12px;border:1px solid var(--line);border-radius:12px;background:var(--soft);">
+                                <small style="font-weight:800;text-transform:uppercase;letter-spacing:.4px;color:var(--muted);">Assign tools on approval</small>
+                                <label class="perm-check"><input type="checkbox" name="canDisableUsers" value="true" checked /> <span>Disable &amp; Lock User Accounts</span></label>
+                                <label class="perm-check"><input type="checkbox" name="canManageCategories" value="true" checked /> <span>Manage Default Categories</span></label>
+                                <label class="perm-check"><input type="checkbox" name="canManageAnnouncements" value="true" checked /> <span>Manage Platform Announcements</span></label>
+                                <label class="perm-check"><input type="checkbox" name="canManageTipTemplates" value="true" checked /> <span>Manage Saving-Tip Templates</span></label>
+                                <label class="perm-check" style="opacity:.55;"><input type="checkbox" disabled /> <span>Manage Other Admins' Task Permissions <em style="font-style:normal;font-weight:600;color:var(--muted);">(not available when granting)</em></span></label>
+                            </div>
+                            <div style="display:flex;gap:8px;justify-content:flex-end;">
+                                <button type="submit" class="button small" style="padding: 6px 12px; font-weight: 700;">Approve &amp; Grant Admin</button>
+                            </div>
+                        </form>
+                        <form method="post" action="/admin/admin-applications/@app.Id/reject" data-admin-ajax data-ajax-remove data-confirm="Reject this administrator request?" style="align-self:flex-end;">
+                            @Html.AntiForgeryToken()
+                            <button type="submit" class="button secondary small" style="padding: 6px 12px; border-color: #ba4b43; color: #ba4b43;">Reject</button>
+                        </form>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+}
+
+<div class="panel" style="margin-bottom: 24px; padding: 0; overflow: hidden;">
+    <div class="panel-heading" style="padding: 20px 24px; margin-bottom: 0; border-bottom: 1px solid var(--line);">
+        <div>
+            <h2 style="font-size: 16px; font-weight: 750;">System Administrators</h2>
+            <p style="font-size: 11px; color: var(--muted); margin: 2px 0 0;">Accounts with administrative access and granular task permissions.</p>
+        </div>
+        <span class="pill" style="background: var(--signal); color: #08111f; font-weight: 700;">@admins.Count Admins</span>
+    </div>
+    <div class="table-scroll">
+        <table class="transaction-table" style="width: 100%;">
+            <thead>
+                <tr>
+                    <th style="width: 28%;">Administrator</th>
+                    <th style="width: 16%;">Role &amp; Status</th>
+                    <th style="width: 24%;">Task Permissions</th>
+                    <th style="width: 32%; text-align: right;">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (!admins.Any())
+                {
+                    <tr>
+                        <td colspan="4" style="text-align: center; padding: 20px; color: var(--muted);">No administrative accounts found.</td>
+                    </tr>
+                }
+                else
+                {
+                    foreach (var user in admins)
+                    {
+                        var isPrimary = !string.IsNullOrWhiteSpace(user.Email)
+                            && user.Email.Trim().Equals("admin@campuscoin.local", StringComparison.OrdinalIgnoreCase);
+                        <tr data-user-row data-user-id="@user.Id" data-role="Administrator" data-primary="@(isPrimary ? "true" : "false")" style="@(isPrimary ? "background: rgba(121, 242, 199, 0.05);" : null)">
+                            <td>
+                                <strong style="font-size: 13px; color: var(--ink);">
+                                    @user.FullName
+                                    @if (isPrimary)
+                                    {
+                                        <span class="pill" style="margin-left: 6px; font-size: 9px; background: var(--signal); color: #08111f;">PRIMARY ADMIN</span>
+                                    }
+                                </strong>
+                                <small style="display: block; color: var(--muted); font-size: 11px;">@user.Email</small>
+                            </td>
+                            <td>
+                                <div style="display: flex; flex-direction: column; gap: 4px;">
+                                    <span class="pill" style="background: var(--ink); color: #ffffff; width: fit-content;">Administrator</span>
+                                    @if (user.IsDisabled)
+                                    {
+                                        <span data-user-status style="color: #ba4b43; font-weight: 700; font-size: 11px;">Disabled</span>
+                                    }
+                                    else
+                                    {
+                                        <span data-user-status style="color: #148361; font-weight: 700; font-size: 11px;">Active</span>
+                                    }
+                                </div>
+                            </td>
+                            <td>
+                                @if (isPrimary)
+                                {
+                                    <span style="font-size:11px;color:var(--muted);">—</span>
+                                }
+                                else if (canManagePerms)
+                                {
+                                    <button type="button" class="button small secondary" style="min-height: 28px; padding: 4px 10px; font-size: 11px;" data-open-perm-modal="@user.Id">Task Permissions</button>
+                                }
+                                else
+                                {
+                                    <div style="display:flex;flex-wrap:wrap;gap:4px;">
+                                        @if (user.CanDisableUsers){<span class="pill" style="font-size:9px;">Users</span>}
+                                        @if (user.CanManageCategories){<span class="pill" style="font-size:9px;">Categories</span>}
+                                        @if (user.CanManageAnnouncements){<span class="pill" style="font-size:9px;">Announcements</span>}
+                                        @if (user.CanManageTipTemplates){<span class="pill" style="font-size:9px;">Tips</span>}
+                                        @if (user.CanManagePermissions){<span class="pill" style="font-size:9px;background:var(--signal);color:#08111f;">Manage perms</span>}
+                                        @if (!user.CanDisableUsers && !user.CanManageCategories && !user.CanManageAnnouncements && !user.CanManageTipTemplates && !user.CanManagePermissions)
+                                        {
+                                            <span style="font-size:10px;color:var(--muted);">No tools</span>
+                                        }
+                                    </div>
+                                }
+                            </td>
+                            <td style="text-align: right;">
+                                <div data-user-actions style="display: flex; gap: 6px; justify-content: flex-end; align-items: center; flex-wrap: wrap;">
+                                    @if (canDisable)
+                                    {
+                                        if (user.IsDisabled)
+                                        {
+                                            <form method="post" action="/admin/users/@user.Id/enable" data-admin-ajax data-ajax-silent style="display:inline;">
+                                                @Html.AntiForgeryToken()
+                                                <button type="submit" class="button small secondary admin-action-btn is-safe">Enable</button>
+                                            </form>
+                                        }
+                                        else if (!isPrimary)
+                                        {
+                                            <form method="post" action="/admin/users/@user.Id/disable" data-admin-ajax data-ajax-silent data-confirm-title="Disable account?" data-confirm-message="This user will not be able to sign in until you enable the account again." data-confirm-label="Disable account" style="display:inline;">
+                                                @Html.AntiForgeryToken()
+                                                <button type="submit" class="button small secondary admin-action-btn is-danger">Disable</button>
+                                            </form>
+                                        }
+                                    }
+                                    @if (!isPrimary && canManagePerms)
+                                    {
+                                        <form method="post" action="/admin/users/@user.Id/remove-admin" data-admin-ajax data-ajax-reload data-ajax-silent data-confirm-title="Revoke administrator?" data-confirm-message="This account will move back to the student list." data-confirm-label="Revoke admin" style="display:inline;">
+                                            @Html.AntiForgeryToken()
+                                            <button type="submit" class="button small secondary admin-action-btn">Revoke Admin</button>
+                                        </form>
+                                    }
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div class="panel" style="padding: 0; overflow: hidden; margin-bottom: 24px;">
+    <div class="panel-heading" style="padding: 20px 24px; margin-bottom: 0; border-bottom: 1px solid var(--line);">
+        <div>
+            <h2 style="font-size: 16px; font-weight: 750;">Student Accounts</h2>
+            <p style="font-size: 11px; color: var(--muted); margin: 2px 0 0;">Standard campus student users registered in the system.</p>
+        </div>
+        <span class="pill">@students.Count Students</span>
+    </div>
+    <div class="table-scroll">
+        <table class="transaction-table" style="width: 100%;">
+            <thead>
+                <tr>
+                    <th style="width: 34%;">Student</th>
+                    <th style="width: 16%;">Role</th>
+                    <th style="width: 16%;">Status</th>
+                    <th style="width: 34%; text-align: right;">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (!students.Any())
+                {
+                    <tr>
+                        <td colspan="4" style="text-align: center; padding: 24px; color: var(--muted);">No student accounts found.</td>
+                    </tr>
+                }
+                else
+                {
+                    foreach (var user in students)
+                    {
+                        <tr data-user-row data-user-id="@user.Id" data-role="Student" data-primary="false">
+                            <td>
+                                <strong>@user.FullName</strong>
+                                <small style="display: block; color: var(--muted); font-size: 11px;">@user.Email</small>
+                            </td>
+                            <td>
+                                <span class="pill" style="background: var(--soft); color: var(--ink);">Student</span>
+                            </td>
+                            <td>
+                                @if (user.IsDisabled)
+                                {
+                                    <span data-user-status style="color: #ba4b43; font-weight: 700; font-size: 11px;">Disabled</span>
+                                }
+                                else
+                                {
+                                    <span data-user-status style="color: #148361; font-weight: 700; font-size: 11px;">Active</span>
+                                }
+                            </td>
+                            <td style="text-align: right;">
+                                <div data-user-actions style="display: flex; gap: 6px; justify-content: flex-end; align-items: center; flex-wrap: wrap;">
+                                    @if (canDisable)
+                                    {
+                                        if (user.IsDisabled)
+                                        {
+                                            <form method="post" action="/admin/users/@user.Id/enable" data-admin-ajax data-ajax-silent style="display:inline;">
+                                                @Html.AntiForgeryToken()
+                                                <button type="submit" class="button small secondary admin-action-btn is-safe">Enable</button>
+                                            </form>
+                                        }
+                                        else
+                                        {
+                                            <form method="post" action="/admin/users/@user.Id/disable" data-admin-ajax data-ajax-silent data-confirm-title="Disable account?" data-confirm-message="This student will not be able to sign in until you enable the account again." data-confirm-label="Disable account" style="display:inline;">
+                                                @Html.AntiForgeryToken()
+                                                <button type="submit" class="button small secondary admin-action-btn is-danger">Disable</button>
+                                            </form>
+                                        }
+                                    }
+                                    @if (canManagePerms)
+                                    {
+                                        <form method="post" action="/admin/users/@user.Id/make-admin" data-admin-ajax data-ajax-reload data-ajax-silent style="display:inline;">
+                                            @Html.AntiForgeryToken()
+                                            <input type="hidden" name="canDisableUsers" value="true" />
+                                            <input type="hidden" name="canManageCategories" value="true" />
+                                            <input type="hidden" name="canManageAnnouncements" value="true" />
+                                            <input type="hidden" name="canManageTipTemplates" value="true" />
+                                            <button type="submit" class="button small admin-action-btn">Grant Admin</button>
+                                        </form>
+                                    }
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+@if (canManagePerms)
+{
+@foreach (var user in admins.Where(u => !string.IsNullOrWhiteSpace(u.Email) && !u.Email.Trim().Equals("admin@campuscoin.local", StringComparison.OrdinalIgnoreCase)))
+{
+    <div id="perm-modal-@user.Id" class="perm-modal" hidden>
+        <div class="perm-modal-card" role="dialog" aria-modal="true" aria-labelledby="perm-title-@user.Id">
+            <h3 id="perm-title-@user.Id" style="margin-top:0; font-size: 20px; letter-spacing: -0.5px;">Assign Admin Tasks</h3>
+            <p style="font-size: 12px; color: var(--muted); margin: 6px 0 18px;">Configure capabilities for <strong>@user.Email</strong></p>
+
+            <form method="post" action="/admin/users/@user.Id/permissions" data-admin-ajax>
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="canDisableUsers" value="false" />
+                <input type="hidden" name="canManageCategories" value="false" />
+                <input type="hidden" name="canManageAnnouncements" value="false" />
+                <input type="hidden" name="canManageTipTemplates" value="false" />
+                <input type="hidden" name="canManagePermissions" value="false" />
+
+                <div style="display: grid; gap: 10px; margin-bottom: 22px; text-align: left;">
+                    <label class="perm-check">
+                        <input type="checkbox" name="canDisableUsers" value="true" @(user.CanDisableUsers ? "checked" : null) />
+                        <span>Disable &amp; Lock User Accounts</span>
+                    </label>
+                    <label class="perm-check">
+                        <input type="checkbox" name="canManageCategories" value="true" @(user.CanManageCategories ? "checked" : null) />
+                        <span>Manage Default Categories</span>
+                    </label>
+                    <label class="perm-check">
+                        <input type="checkbox" name="canManageAnnouncements" value="true" @(user.CanManageAnnouncements ? "checked" : null) />
+                        <span>Manage Platform Announcements</span>
+                    </label>
+                    <label class="perm-check">
+                        <input type="checkbox" name="canManageTipTemplates" value="true" @(user.CanManageTipTemplates ? "checked" : null) />
+                        <span>Manage Saving-Tip Templates</span>
+                    </label>
+                    <label class="perm-check" style="opacity:.7;">
+                        <input type="checkbox" name="canManagePermissions" value="true" @(user.CanManagePermissions ? "checked" : null) />
+                        <span>Manage Other Admins' Task Permissions <small style="display:block;color:var(--muted);font-weight:600;">Also required to grant/revoke admin — leave off unless you trust this admin fully</small></span>
+                    </label>
+                </div>
+                <div style="display: flex; justify-content: flex-end; gap: 10px;">
+                    <button type="button" class="button secondary small" data-close-perm-modal="@user.Id">Cancel</button>
+                    <button type="submit" class="button small">Save Permissions</button>
+                </div>
+            </form>
+        </div>
+    </div>
+}
+}
+
+<style>
+.perm-modal[hidden] { display: none !important; }
+.perm-modal {
+    position: fixed !important;
+    inset: 0 !important;
+    z-index: 1000000 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    padding: 20px !important;
+    background: rgba(8, 17, 31, 0.78) !important;
+    backdrop-filter: blur(12px);
+}
+.perm-modal-card {
+    width: min(92vw, 460px);
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 24px;
+    padding: 32px;
+    box-shadow: 0 30px 80px rgba(0, 0, 0, 0.45);
+    max-height: 90vh;
+    overflow-y: auto;
+}
+.perm-check {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 14px;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    background: var(--soft);
+    font-size: 12px;
+    font-weight: 650;
+    cursor: pointer;
+}
+.perm-check input {
+    width: 18px;
+    height: 18px;
+    accent-color: var(--signal);
+}
+</style>
+
+@section Scripts {
+<script>
+(() => {
+    const openModal = (id) => {
+        const modal = document.getElementById(id);
+        if (!modal) return;
+        modal.hidden = false;
+        modal.removeAttribute('hidden');
+    };
+    const closeModal = (id) => {
+        const modal = document.getElementById(id);
+        if (!modal) return;
+        modal.hidden = true;
+        modal.setAttribute('hidden', '');
+    };
+
+    document.querySelectorAll('[data-open-perm-modal]').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            e.preventDefault();
+            openModal(`perm-modal-${btn.getAttribute('data-open-perm-modal')}`);
+        });
+    });
+    document.querySelectorAll('[data-close-perm-modal]').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            e.preventDefault();
+            closeModal(`perm-modal-${btn.getAttribute('data-close-perm-modal')}`);
+        });
+    });
+    document.querySelectorAll('.perm-modal').forEach(modal => {
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                modal.hidden = true;
+                modal.setAttribute('hidden', '');
+            }
+        });
+    });
+    document.addEventListener('admin:ajax-success', (e) => {
+        const form = e.target;
+        if (!(form instanceof HTMLFormElement)) return;
+        const modal = form.closest('.perm-modal');
+        if (modal) {
+            modal.hidden = true;
+            modal.setAttribute('hidden', '');
+        }
+    });
+})();
+</script>
+}

@@ -1,0 +1,95 @@
+@model CampusCoin.ViewModels.AdminSharedExpenseFilterViewModel
+@{
+    ViewData["Title"] = "Shared Expense Oversight";
+    ViewData["HeaderEyebrow"] = "Admin oversight";
+    ViewData["HeaderTitle"] = "Shared expense oversight";
+    ViewData["HeaderLead"] = "Inspect, search, flag inappropriate descriptions, or hide items from group pulse calculations.";
+}
+<partial name="_PageHeader" />
+
+<section class="panel" style="margin-bottom:18px;">
+    <form method="get" asp-action="SharedExpenses" style="display:flex;gap:12px;align-items:flex-end;flex-wrap:wrap;">
+        <div style="flex:1;min-width:220px;">
+            <label style="font-size:12px;color:var(--text-muted);">Search Query</label>
+            <input type="text" name="q" value="@Model.SearchQuery" class="form-control" placeholder="Search expense description, group name, or payer email..." />
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;padding-bottom:10px;">
+            <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer;">
+                <input type="checkbox" name="flagged" value="true" checked="@(Model.FlaggedOnly==true)" />
+                <span>Flagged Only</span>
+            </label>
+        </div>
+        <div style="display:flex;gap:8px;">
+            <button type="submit" class="button">Search</button>
+            <a asp-action="SharedExpenses" class="button secondary">Reset</a>
+        </div>
+    </form>
+</section>
+
+<section class="panel">
+    <div class="table-responsive">
+        <table class="table" style="width:100%;">
+            <thead>
+                <tr>
+                    <th>Group</th>
+                    <th>Payer</th>
+                    <th>Expense Description</th>
+                    <th>Tag / Category</th>
+                    <th>Amount</th>
+                    <th>Date</th>
+                    <th>Status Flags</th>
+                    <th style="text-align:right;">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (!Model.Expenses.Any())
+                {
+                    <tr>
+                        <td colspan="8" style="text-align:center;padding:30px;color:var(--text-muted);">No shared expenses found matching your query.</td>
+                    </tr>
+                }
+                else
+                {
+                    @foreach (var exp in Model.Expenses)
+                    {
+                        <tr>
+                            <td>
+                                <a asp-action="GroupDetails" asp-route-id="@exp.GroupId" style="color:var(--color-primary);font-weight:600;text-decoration:none;">@exp.GroupName</a>
+                            </td>
+                            <td>@exp.PayerEmail</td>
+                            <td>
+                                <strong>@exp.Title</strong>
+                            </td>
+                            <td>
+                                <span class="pill secondary">@exp.Category</span>
+                                @if (!string.IsNullOrEmpty(exp.Tag)) { <span class="pill accent">@exp.Tag</span> }
+                            </td>
+                            <td><strong style="color:var(--color-primary);">@Currency.FormatForUser(exp.PayerUserId, exp.AmountCents)</strong></td>
+                            <td>@exp.CreatedAt.ToString("MMM dd, HH:mm")</td>
+                            <td>
+                                @if (exp.IsFlagged) { <span class="badge danger">Flagged</span> }
+                                @if (exp.IsHiddenFromPulse) { <span class="badge secondary">Pulse Hidden</span> }
+                            </td>
+                            <td style="text-align:right;">
+                                <div style="display:flex;gap:6px;justify-content:flex-end;flex-wrap:wrap;">
+                                    <form asp-action="ToggleFlagSharedExpense" asp-route-id="@exp.Id" method="post">
+                                        @Html.AntiForgeryToken()
+                                        <button type="submit" class="button secondary small">@(exp.IsFlagged ? "Unflag" : "Flag")</button>
+                                    </form>
+                                    <form asp-action="TogglePulseHideSharedExpense" asp-route-id="@exp.Id" method="post">
+                                        @Html.AntiForgeryToken()
+                                        <button type="submit" class="button secondary small">@(exp.IsHiddenFromPulse ? "Unhide" : "Hide pulse")</button>
+                                    </form>
+                                    <form asp-action="DeleteSharedExpense" asp-route-id="@exp.Id" method="post" data-confirm="Delete this expense?">
+                                        @Html.AntiForgeryToken()
+                                        <button type="submit" class="button danger small">Delete</button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+</section>

@@ -1,0 +1,19 @@
+@model SafeToSpendViewModel
+<article class="panel safe-spend-card">
+    <div class="safe-spend-head">
+        <div>
+            <span class="tiny-label">DAILY PACE</span>
+            <h2>Safe to Spend Today</h2>
+        </div>
+        <span class="pill safe-spend-pill">@Model.DaysLeft day@(Model.DaysLeft == 1 ? "" : "s") left</span>
+    </div>
+    <strong class="safe-spend-amount">@Model.AmountFormatted</strong>
+    <p class="safe-spend-blurb">@Model.Blurb</p>
+    <div class="safe-spend-meter" aria-hidden="true">
+        <span style="width:@Model.MonthProgressPercent%"></span>
+    </div>
+    <div class="safe-spend-meta">
+        <span>Pool @Model.RemainingBudgetFormatted</span>
+        <span>Month @Model.MonthProgressPercent% through</span>
+    </div>
+</article>

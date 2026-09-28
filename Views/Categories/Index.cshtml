@@ -1,0 +1,49 @@
+@model List<Category>
+@{
+    ViewData["Title"] = "Categories";
+    ViewData["HeaderEyebrow"] = "Organize";
+    ViewData["HeaderTitle"] = "Categories";
+    ViewData["HeaderLead"] = "Essentials plus the ones you add.";
+    ViewData["HeaderPrimaryText"] = "＋ New category";
+    ViewData["HeaderPrimaryController"] = "Categories";
+    ViewData["HeaderPrimaryAction"] = "Edit";
+    var expenseCount = Model.Count(x => x.Type == CategoryType.Expense);
+    var incomeCount = Model.Count(x => x.Type == CategoryType.Income);
+    var personalCount = Model.Count(x => x.UserId != null);
+}
+<partial name="_PageHeader" />
+<div class="category-stats">
+    <span><strong>@expenseCount</strong> expense</span>
+    <span><strong>@incomeCount</strong> income</span>
+    <span><strong>@personalCount</strong> personal</span>
+</div>
+@foreach (var type in Enum.GetValues<CategoryType>())
+{
+    <div class="section-heading">
+        <h2>@(type == CategoryType.Income ? "Money coming in" : "Everyday spending") <span class="section-count">@Model.Count(x => x.Type == type)</span></h2>
+    </div>
+    <div class="category-grid">
+        @foreach (var c in Model.Where(x => x.Type == type))
+        {
+            var icon = c.Name switch { "Food" => "food", "Transport" => "transport", "Hostel/Rent" => "home", "Academics" => "book", "Subscriptions" => "screen", "Entertainment" => "play", "Allowance" => "wallet", "Part-time Job" => "work", "Scholarship" => "book", "Gift" => "gift", _ => "grid" };
+            <article class="panel category-card @(type == CategoryType.Income ? "category-income" : "")">
+                <div class="category-card-top">
+                    <span class="category-symbol" aria-hidden="true"><svg viewBox="0 0 24 24"><use href="/images/icons.svg#@icon" /></svg></span>
+                    <span class="category-kind">@(c.UserId == null ? "ESSENTIAL" : "PERSONAL")</span>
+                </div>
+                <h3>@c.Name</h3>
+                <div class="category-card-bottom">
+                    <span>@type</span>
+                    @if (c.UserId != null)
+                    {
+                        <a asp-action="Edit" asp-route-id="@c.Id" aria-label="Edit @c.Name">Manage ↗</a>
+                    }
+                    else
+                    {
+                        <span class="default-label">Ready ✓</span>
+                    }
+                </div>
+            </article>
+        }
+    </div>
+}

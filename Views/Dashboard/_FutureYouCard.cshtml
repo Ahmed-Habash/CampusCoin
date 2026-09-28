@@ -1,0 +1,54 @@
+@model CampusCoin.ViewModels.FutureYouDashboardCardViewModel
+@{
+    var highlight = Model.FutureMessage is { } msg
+        ? (Label: msg.FromLabel, Body: msg.Body, Kind: "msg")
+        : Model.Tips.Count > 0
+            ? (Label: "Tip", Body: Model.Tips[0].Title + " — " + Model.Tips[0].Body, Kind: "tip")
+            : (Label: "", Body: "", Kind: "");
+}
+<article class="panel fy-dash-card">
+    <header class="fy-dash-head">
+        <span class="tiny-label">Future You</span>
+        <h2>Your next money chapter</h2>
+        <p>Sandbox for @(Model.GoalName) — never writes to real budgets.</p>
+    </header>
+
+    <div class="fy-dash-metrics" role="group" aria-label="Goal snapshot">
+        <div>
+            <span class="tiny-label">Still to go</span>
+            <strong>@Model.GoalRemainingFormatted</strong>
+        </div>
+        <div>
+            <span class="tiny-label">Your scenario</span>
+            <strong>@Model.MonthsLabel</strong>
+        </div>
+    </div>
+
+    @if (!string.IsNullOrWhiteSpace(Model.CoachingMessage))
+    {
+        <p class="fy-dash-coach">@Model.CoachingMessage</p>
+    }
+
+    @if (!string.IsNullOrWhiteSpace(highlight.Body))
+    {
+        <blockquote class="fy-dash-highlight" data-kind="@highlight.Kind">
+            @if (!string.IsNullOrWhiteSpace(highlight.Label))
+            {
+                <span class="tiny-label">@highlight.Label</span>
+            }
+            <p>@highlight.Body</p>
+        </blockquote>
+    }
+
+    <footer class="fy-dash-foot">
+        @if (Model.Challenge.HasChallenge && Model.Challenge.Status is "Active" or "Paused")
+        {
+            <span class="fy-dash-chip">@Model.Challenge.CompletionPercent% · @Model.Challenge.StreakDays-day streak</span>
+        }
+        else
+        {
+            <span class="fy-dash-chip is-soft">Estimates only</span>
+        }
+        <a class="button small" asp-controller="FutureYou" asp-action="Index">Open Future You <span aria-hidden="true">↗</span></a>
+    </footer>
+</article>

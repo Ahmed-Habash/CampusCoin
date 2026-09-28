@@ -1,0 +1,25 @@
+@model XpProgressViewModel
+<article class="xp-card" aria-label="Financial XP progress">
+    <div class="xp-card-top">
+        <span class="xp-level-badge">Lv <strong>@Model.Level</strong> · @Model.Title</span>
+        <span class="xp-title">@Model.TotalXp XP total</span>
+    </div>
+    <div class="xp-bar" style="--xp-pct:@Model.ProgressPercent%;" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="@Model.ProgressPercent" aria-label="XP progress to next level">
+        <i></i>
+    </div>
+    <div class="xp-meta">
+        <span>@Model.XpIntoLevel / @Model.XpForNextLevel XP this level</span>
+        <span>Next level</span>
+    </div>
+</article>
+@if (Model.JustLeveledUp)
+{
+    <div id="xp-levelup" class="xp-levelup" role="dialog" aria-modal="true" aria-label="Level up">
+        <div class="xp-levelup-card">
+            <span>Level up</span>
+            <strong>Level @Model.Level</strong>
+            <p>New title unlocked: <em>@Model.Title</em>. Keep logging smart money habits.</p>
+            <button type="button" class="button small" data-close-levelup>Nice!</button>
+        </div>
+    </div>
+}

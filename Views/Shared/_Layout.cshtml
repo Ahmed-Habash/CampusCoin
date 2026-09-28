@@ -1,0 +1,179 @@
+@inject CampusCoin.Services.AdminWorkspaceService Workspace
+@{
+    var signedIn = User.Identity?.IsAuthenticated == true;
+    var section = ViewContext.RouteData.Values["controller"]?.ToString();
+    var action = ViewContext.RouteData.Values["action"]?.ToString();
+    var authPage = !signedIn && section == "Account" && (action == "Login" || action == "Register");
+    var isAdmin = signedIn && User.IsInRole("Administrator");
+    var showAdminUi = Workspace.ShowAdminUi;
+    var adminEmail = User.FindFirst(System.Security.Claims.ClaimTypes.Email)?.Value ?? User.Identity?.Name ?? "";
+    var isPrimaryAdmin = isAdmin && adminEmail.Trim().Equals("admin@campuscoin.local", StringComparison.OrdinalIgnoreCase);
+    var userIdAttr = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? "";
+    var workspaceAttr = showAdminUi ? "admin" : "student";
+}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>@ViewData["Title"] · Campus Coin</title>
+    <link rel="manifest" href="~/manifest.json" /><meta name="theme-color" content="#0f172a" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;600;700;800&family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400;1,500&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="~/lib/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/v2.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/xp-whatif.css" asp-append-version="true" />
+    <script src="~/js/preferences.js" asp-append-version="true"></script>
+</head>
+<body class="@(signedIn ? "app" : "public") @(authPage ? "auth-page" : "") @(showAdminUi ? "admin-workspace" : "")" data-user-id="@userIdAttr" data-workspace="@workspaceAttr">
+<a href="#main" class="skip-link">Skip to content</a>
+@if(!showAdminUi && TempData["Success"] is string success){<div class="notice success notice-toast" role="status" data-flash-notice>✓ @success</div>}
+@if(TempData["Error"] is string error){<div class="notice error notice-toast" role="alert" data-flash-notice>@error</div>}
+@if(signedIn) {
+<button type="button" class="nav-scrim" id="nav-scrim" aria-hidden="true" tabindex="-1"></button>
+<aside class="sidebar" id="sidebar">
+    <div class="sidebar-top">
+        <a class="brand" asp-controller="@(showAdminUi ? "Admin" : "Dashboard")" asp-action="Index">
+            <span class="brand-icon" aria-hidden="true">c</span>
+            <span class="brand-word">C-<span class="brand-light">Coin</span></span>
+        </a>
+        <button type="button" class="sidebar-collapse" id="sidebar-collapse" aria-label="Hide navigation">
+            <svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true" focusable="false">
+                <path d="M10.2 3.2 5.4 8l4.8 4.8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+        </button>
+    </div>
+    <div class="workspace-label">
+        @(showAdminUi ? "Admin" : "Workspace")
+        @if(isAdmin){<span class="role-pill">Admin</span>}
+    </div>
+    @if(isAdmin){
+        <form class="workspace-switch" asp-controller="Account" asp-action="SetWorkspace" method="post">
+            @if(showAdminUi){
+                <input type="hidden" name="mode" value="student" />
+                <button class="workspace-switch-btn" type="submit">← Student workspace</button>
+            } else {
+                <input type="hidden" name="mode" value="admin" />
+                <button class="workspace-switch-btn admin" type="submit">Open admin tools →</button>
+            }
+        </form>
+    }
+    @await Component.InvokeAsync("SidebarNav")
+    <div class="sidebar-note @(showAdminUi ? "is-admin" : "is-tip")">
+        <div class="sidebar-note-top">
+            <span class="sidebar-note-mark" aria-hidden="true">@(showAdminUi ? "◈" : "✦")</span>
+            <span class="tiny-label">@(showAdminUi ? (isPrimaryAdmin ? "Primary admin" : "Governance") : "Today’s tip")</span>
+        </div>
+        <h3>@(showAdminUi ? "Campus Coin Admin" : "Small steps.\nBig possibilities.")</h3>
+        <p>@(showAdminUi ? (isPrimaryAdmin ? "Full platform control — manage users, groups, and governance tools." : "Tools assigned to your admin role appear here.") : "Your future self will thank you for checking in today.")</p>
+    </div>
+    <div class="sidebar-trail">
+        <a class="sidebar-bottom account-link" asp-controller="Profile" asp-action="Index">
+            <span class="avatar" aria-hidden="true">@(User.Identity?.Name?.Substring(0,1).ToUpper())</span>
+            <div class="account-meta">
+                <strong>@(showAdminUi ? "Administrator" : "Student account")</strong>
+                <small>@User.Identity?.Name</small>
+            </div>
+            <span class="account-arrow" aria-hidden="true">
+                <svg viewBox="0 0 16 16" width="14" height="14" focusable="false"><path d="M5 11.5 11 5.5M6.2 5.5H11v4.8" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </span>
+        </a>
+        <form asp-controller="Account" asp-action="Logout" method="post"><button class="signout" type="submit">Sign out</button></form>
+    </div>
+</aside>
+}
+<div class="@(signedIn ? "app-content" : "public-content")">
+<header class="topbar @(signedIn ? "topbar-app" : "topbar-public")">
+    @if(signedIn) {
+        <button class="icon-button nav-toggle" type="button" id="nav-toggle" aria-label="Show navigation" aria-controls="sidebar" aria-expanded="true">
+            <svg class="menu-ico" viewBox="0 0 18 18" width="18" height="18" aria-hidden="true" focusable="false">
+                <path class="menu-ico-open" d="M3 5.25h12M3 9h12M3 12.75h12" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"/>
+                <path class="menu-ico-close" d="M4.5 4.5l9 9M13.5 4.5l-9 9" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"/>
+            </svg>
+        </button>
+        <div class="breadcrumb-line">Workspace <span>/</span> <strong>@ViewData["Title"]</strong></div>
+        <div class="top-actions top-actions-app">
+            @if(!showAdminUi){
+                <a class="button small app-quick-add" asp-controller="Transactions" asp-action="Edit">＋ Add</a>
+                @await Component.InvokeAsync("XpBadge")
+            }
+            <button class="icon-button" id="font-toggle" type="button" aria-label="Toggle larger text" aria-pressed="false"><span class="font-ico">Aa</span></button>
+            <button class="icon-button" id="theme-toggle" type="button" aria-label="Toggle dark mode" aria-pressed="false">
+                <svg class="theme-ico theme-ico-moon" viewBox="0 0 16 16" width="15" height="15" aria-hidden="true" focusable="false"><path d="M13.2 9.1A5.6 5.6 0 0 1 6.9 2.8 5.7 5.7 0 1 0 13.2 9.1Z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>
+                <svg class="theme-ico theme-ico-sun" viewBox="0 0 16 16" width="15" height="15" aria-hidden="true" focusable="false"><circle cx="8" cy="8" r="3.1" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M8 1.6v1.5M8 12.9v1.5M1.6 8h1.5M12.9 8h1.5M3.3 3.3l1.1 1.1M11.6 11.6l1.1 1.1M12.7 3.3l-1.1 1.1M4.4 11.6l-1.1 1.1" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+            </button>
+        </div>
+    } else {
+        <div class="nav-shell">
+            <a class="brand" asp-controller="Home" asp-action="Index"><span class="brand-icon">c</span><span class="brand-word">campus<span class="brand-light">coin</span></span></a>
+            <nav class="public-nav @(authPage ? "is-auth" : "")" aria-label="Public navigation">
+                <span class="nav-indicator" aria-hidden="true"></span>
+                @if (!authPage)
+                {
+                    <a asp-controller="Home" asp-action="Index" asp-fragment="why-campus-coin">Why</a>
+                    <a asp-controller="Home" asp-action="Index" asp-fragment="how-it-works">How it works</a>
+                    <a asp-controller="Home" asp-action="Index" asp-fragment="practical-tools">Tools</a>
+                    <a asp-controller="Home" asp-action="Index" asp-fragment="sitemap">Explore</a>
+                }
+                else
+                {
+                    <a asp-controller="Home" asp-action="Index">Home</a>
+                    <a asp-controller="Account" asp-action="Login" class="@(action == "Login" ? "is-active" : null)">Log in</a>
+                    <a asp-controller="Account" asp-action="Register" class="@(action == "Register" ? "is-active" : null)">Sign up</a>
+                }
+            </nav>
+            <div class="top-actions">
+                <button class="icon-button" id="font-toggle" type="button" aria-label="Toggle larger text" aria-pressed="false"><span class="font-ico">Aa</span></button>
+                <button class="icon-button" id="theme-toggle" type="button" aria-label="Toggle dark mode" aria-pressed="false">
+                    <svg class="theme-ico theme-ico-moon" viewBox="0 0 16 16" width="15" height="15" aria-hidden="true" focusable="false"><path d="M13.2 9.1A5.6 5.6 0 0 1 6.9 2.8 5.7 5.7 0 1 0 13.2 9.1Z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>
+                    <svg class="theme-ico theme-ico-sun" viewBox="0 0 16 16" width="15" height="15" aria-hidden="true" focusable="false"><circle cx="8" cy="8" r="3.1" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M8 1.6v1.5M8 12.9v1.5M1.6 8h1.5M12.9 8h1.5M3.3 3.3l1.1 1.1M11.6 11.6l1.1 1.1M12.7 3.3l-1.1 1.1M4.4 11.6l-1.1 1.1" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+                </button>
+                @if (!authPage)
+                {
+                    <a class="text-link topbar-cta-login" asp-controller="Account" asp-action="Login">Log in</a>
+                    <a class="button small topbar-cta-primary" asp-controller="Account" asp-action="Register">Get started</a>
+                }
+                else if (action == "Login")
+                {
+                    <a class="button small topbar-cta-primary" asp-controller="Account" asp-action="Register">Create account</a>
+                }
+                else
+                {
+                    <a class="button small topbar-cta-primary" asp-controller="Account" asp-action="Login">Log in</a>
+                }
+            </div>
+        </div>
+    }
+</header>
+<main id="main" class="main">
+@RenderBody()
+</main>
+<footer class="footer"><span>Campus Coin © @DateTime.Today.Year</span><span>Built for student money clarity.</span></footer>
+</div>
+@if(signedIn) { <partial name="_Assistant" /> }
+<script>
+(() => {
+    const hide = (el) => {
+        el.classList.add('is-hiding');
+        setTimeout(() => el.remove(), 280);
+    };
+    document.querySelectorAll('[data-flash-notice], .notice.success.notice-toast, .notice.error.notice-toast').forEach(el => {
+        setTimeout(() => hide(el), 4200);
+    });
+})();
+</script>
+<script src="~/js/site.js" asp-append-version="true"></script>
+@if(showAdminUi || (signedIn && isAdmin)){<script src="~/js/admin-ajax.js" asp-append-version="true"></script>}
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.getRegistrations().then(regs => {
+      const refresh = () => navigator.serviceWorker.register('/sw.js').catch(() => {});
+      if (!regs.length) return refresh();
+      Promise.all(regs.map(r => r.update())).then(refresh).catch(refresh);
+    });
+  });
+}
+</script>
+@await RenderSectionAsync("Scripts",required:false)
+</body></html>

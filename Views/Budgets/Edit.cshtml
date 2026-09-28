@@ -1,0 +1,30 @@
+@model BudgetForm
+@{ViewData["Title"]=Model.Id==0?"Set a budget":"Adjust budget";}
+<a class="back-link" asp-action="Index">← Back to budgets</a>
+<div class="page-heading"><div><h1>@ViewData["Title"]</h1><p>A realistic limit is a great place to start.</p></div></div>
+<section class="panel form-panel">
+    <form method="post" id="budget-edit-form">
+        <input asp-for="Id" type="hidden" />
+        <div asp-validation-summary="All" class="validation" role="alert"></div>
+        <label asp-for="CategoryId"></label>
+        <select asp-for="CategoryId" asp-items="ViewBag.Categories"><option value="">Choose an expense category</option></select>
+        <div class="form-grid">
+            <div><label asp-for="Amount">Monthly limit (@Currency.Code)</label><input asp-for="Amount" type="number" min="0.01" max="1000000" step="0.01" placeholder="0.00" inputmode="decimal" /></div>
+            <div><label asp-for="Month"></label><input asp-for="Month" type="month" aria-label="Month" asp-format="{0:yyyy-MM}" /></div>
+        </div>
+        <div class="form-actions">
+            @if(Model.Id!=0){
+                <button type="submit" form="budget-delete-form" class="danger-link" style="white-space:nowrap">Delete budget</button>
+            }
+            <div style="margin-left:auto;display:flex;gap:8px;align-items:center">
+                <a asp-action="Index" class="button secondary">Cancel</a>
+                <button class="button" type="submit">Save budget ↗</button>
+            </div>
+        </div>
+    </form>
+    @if(Model.Id!=0){
+        <form asp-action="Delete" asp-route-id="@Model.Id" method="post" id="budget-delete-form" class="delete-form" data-confirm="Remove this monthly budget? Your transactions will remain." style="display:none"></form>
+    }
+</section>
+
+

@@ -1,0 +1,34 @@
+@{
+    var eyebrow = ViewData["HeaderEyebrow"] as string;
+    var title = ViewData["HeaderTitle"] as string ?? ViewData["Title"] as string ?? "";
+    var lead = ViewData["HeaderLead"] as string;
+    var primaryText = ViewData["HeaderPrimaryText"] as string;
+    var primaryController = ViewData["HeaderPrimaryController"] as string;
+    var primaryAction = ViewData["HeaderPrimaryAction"] as string ?? "Edit";
+    var secondaryText = ViewData["HeaderSecondaryText"] as string;
+    var secondaryController = ViewData["HeaderSecondaryController"] as string;
+    var secondaryAction = ViewData["HeaderSecondaryAction"] as string ?? "Index";
+}
+<header class="page-chrome">
+    <div class="page-chrome-copy">
+        @if (!string.IsNullOrWhiteSpace(eyebrow))
+        {
+            <span class="eyebrow">@eyebrow</span>
+        }
+        <h1>@title</h1>
+        @if (!string.IsNullOrWhiteSpace(lead))
+        {
+            <p>@lead</p>
+        }
+    </div>
+    <div class="page-chrome-actions">
+        @if (!string.IsNullOrWhiteSpace(secondaryText) && !string.IsNullOrWhiteSpace(secondaryController))
+        {
+            <a class="button secondary" asp-controller="@secondaryController" asp-action="@secondaryAction">@secondaryText</a>
+        }
+        @if (!string.IsNullOrWhiteSpace(primaryText) && !string.IsNullOrWhiteSpace(primaryController))
+        {
+            <a class="button" asp-controller="@primaryController" asp-action="@primaryAction">@primaryText</a>
+        }
+    </div>
+</header>

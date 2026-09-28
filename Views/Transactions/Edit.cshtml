@@ -1,0 +1,111 @@
+@model CampusCoin.ViewModels.TransactionForm
+@{
+    ViewData["Title"] = Model.Id == 0 ? "Add transaction" : "Edit transaction";
+    var isEdit = Model.Id != 0;
+}
+<link rel="stylesheet" href="~/css/forms-polish.css" asp-append-version="true" />
+
+<a class="back-link" asp-action="Index">← Back to transactions</a>
+
+<div class="page-heading tx-edit-heading">
+    <div>
+        <span class="eyebrow">EVERY COIN HAS A STORY</span>
+        <h1>@ViewData["Title"]</h1>
+        <p>A quick check-in now. A clearer picture later.</p>
+    </div>
+</div>
+
+<aside id="fy-expense-message" class="panel fy-tx-message" hidden>
+    <span class="tiny-label" data-fy-label></span>
+    <p data-fy-body></p>
+    <small class="muted">Advisory only — this never blocks saving.</small>
+</aside>
+
+<section class="panel form-panel tx-form-panel">
+    <form method="post" class="tx-form" id="tx-edit-form">
+        <input asp-for="Id" type="hidden" />
+        <div asp-validation-summary="All" class="validation" role="alert"></div>
+
+        <div class="tx-field">
+            <label asp-for="Description"></label>
+            <input asp-for="Description" placeholder="e.g. Lunch at Campus Cafe" />
+        </div>
+
+        <div class="form-grid tx-form-grid">
+            <div class="tx-field">
+                <label asp-for="Amount">Amount (@Currency.Code)</label>
+                <input asp-for="Amount" type="number" min="0.01" max="1000000" step="0.01" placeholder="0.00" inputmode="decimal" id="Amount" />
+            </div>
+            <div class="tx-field">
+                <label asp-for="Date"></label>
+                <input asp-for="Date" type="date" />
+            </div>
+        </div>
+
+        <div class="tx-field">
+            <label asp-for="CategoryId"></label>
+            <select asp-for="CategoryId" asp-items="ViewBag.Categories" id="CategoryId">
+                <option value="">Choose a category</option>
+            </select>
+            <p class="field-help">The category determines whether this is income or an expense.</p>
+        </div>
+
+        <div class="tx-form-footer">
+            <div class="tx-form-footer-danger">
+                @if (isEdit)
+                {
+                    <span class="tx-danger-slot" aria-hidden="true"></span>
+                }
+            </div>
+            <div class="tx-form-footer-primary">
+                <a asp-action="Index" class="button secondary">Cancel</a>
+                <button class="button" type="submit">@(isEdit ? "Save changes" : "Save transaction") ↗</button>
+            </div>
+        </div>
+    </form>
+
+    @if (isEdit)
+    {
+        <form asp-action="Delete" asp-route-id="@Model.Id" method="post" class="tx-delete-form" data-confirm="Remove this transaction? It will leave your totals; its audit history is kept.">
+            <button class="button danger" type="submit">Delete transaction</button>
+        </form>
+    }
+</section>
+
+@section Scripts {
+<script>
+(() => {
+  const amount = document.getElementById('Amount');
+  const category = document.getElementById('CategoryId');
+  const box = document.getElementById('fy-expense-message');
+  const slot = document.querySelector('.tx-danger-slot');
+  const del = document.querySelector('.tx-delete-form');
+  if (slot && del) slot.replaceWith(del);
+
+  if (!amount || !box) return;
+  let timer;
+  const refresh = () => {
+    clearTimeout(timer);
+    timer = setTimeout(async () => {
+      const value = Number(amount.value || 0);
+      if (!(value > 0)) { box.hidden = true; return; }
+      const catText = category?.selectedOptions?.[0]?.text || '';
+      const looksIncome = /income|allowance|scholarship|gift|job/i.test(catText);
+      if (looksIncome) { box.hidden = true; return; }
+      try {
+        const url = `/FutureYou/expense-message?amount=${encodeURIComponent(value)}&category=${encodeURIComponent(catText)}`;
+        const res = await fetch(url, { headers: { Accept: 'application/json' } });
+        if (!res.ok) return;
+        const data = await res.json();
+        if (!data.ok || !data.message) { box.hidden = true; return; }
+        box.querySelector('[data-fy-label]').textContent = data.message.fromLabel || 'Message from Future You';
+        box.querySelector('[data-fy-body]').textContent = data.message.body || '';
+        box.hidden = false;
+      } catch { box.hidden = true; }
+    }, 280);
+  };
+  amount.addEventListener('input', refresh);
+  category?.addEventListener('change', refresh);
+})();
+</script>
+}

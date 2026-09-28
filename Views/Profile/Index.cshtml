@@ -1,0 +1,136 @@
+@model ProfileForm
+@{
+    ViewData["Title"] = "Profile";
+    var isAdmin = ViewBag.IsAdminProfile == true;
+    var yearLabel = string.IsNullOrWhiteSpace(Model.AcademicYear) ? "Not set" : Model.AcademicYear;
+    var goalLabel = Model.SavingsGoal.GetValueOrDefault() <= 0 ? "Not set" : Currency.Format(Model.SavingsGoal!.Value);
+    var allowanceLabel = Model.Allowance.GetValueOrDefault() <= 0 ? "Not set" : Currency.Format(Model.Allowance!.Value);
+}
+<div class="page-heading">
+    <div>
+        @if (isAdmin)
+        {
+            <span class="eyebrow">ADMIN ACCOUNT</span>
+            <h1>Your administrator profile</h1>
+            <p>Update how your name appears across Campus Coin admin tools.</p>
+        }
+        else
+        {
+            <span class="eyebrow">YOUR ACCOUNT</span>
+            <h1>Profile</h1>
+            <p>Personal details, goals, and password in one place.</p>
+        }
+    </div>
+</div>
+
+<section class="profile-page">
+    <article class="panel profile-identity">
+        <div class="profile-identity-main">
+            <span class="profile-avatar">@(char.ToUpper(Model.FullName.FirstOrDefault()))</span>
+            <div>
+                <h2>@Model.FullName</h2>
+                <p>@Model.Email</p>
+            </div>
+        </div>
+        <dl class="profile-identity-meta">
+            @if (isAdmin)
+            {
+                <div><dt>Role</dt><dd>Administrator</dd></div>
+                <div><dt>Title</dt><dd>@yearLabel</dd></div>
+            }
+            else
+            {
+                <div><dt>Year</dt><dd>@yearLabel</dd></div>
+                <div><dt>Goal</dt><dd>@goalLabel</dd></div>
+                <div><dt>Allowance</dt><dd>@allowanceLabel</dd></div>
+                <div><dt>Currency</dt><dd>@Currency.Code</dd></div>
+            }
+        </dl>
+    </article>
+
+    <article class="panel profile-editor">
+        <div class="profile-editor-grid">
+            <section class="profile-editor-block">
+                <header class="profile-editor-head">
+                    <h2>@(isAdmin ? "Account details" : "Personal details")</h2>
+                    <p>@(isAdmin ? "Visible in the admin workspace." : "Only you can see these.")</p>
+                </header>
+                <form method="post" class="profile-details-form">
+                    <div asp-validation-summary="All" class="validation" role="alert"></div>
+                    <div class="profile-field">
+                        <label asp-for="FullName"></label>
+                        <input asp-for="FullName" autocomplete="name" />
+                    </div>
+                    <div class="profile-field">
+                        <label asp-for="Email"></label>
+                        <input asp-for="Email" disabled />
+                        <small class="field-help">Sign-in email can’t be changed here.</small>
+                    </div>
+                    @if (isAdmin)
+                    {
+                        <div class="profile-field">
+                            <label for="AcademicYear">Title</label>
+                            <input asp-for="AcademicYear" id="AcademicYear" placeholder="e.g. Staff, Finance lead" />
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="profile-field">
+                            <label asp-for="AcademicYear"></label>
+                            <input asp-for="AcademicYear" placeholder="e.g. Year 2" />
+                        </div>
+                        <div class="profile-field-row">
+                            <div class="profile-field">
+                                <label asp-for="Allowance"></label>
+                                <input asp-for="Allowance" type="number" min="0" max="1000000" step="0.01" placeholder="0.00" inputmode="decimal" />
+                            </div>
+                            <div class="profile-field">
+                                <label asp-for="SavingsGoal"></label>
+                                <input asp-for="SavingsGoal" type="number" min="0" max="1000000" step="0.01" placeholder="0.00" inputmode="decimal" />
+                            </div>
+                        </div>
+                    }
+                    <div class="profile-editor-actions">
+                        <button class="button" type="submit">@(isAdmin ? "Save account" : "Save profile")</button>
+                        <a class="text-link" asp-controller="Settings" asp-action="Index">Open Settings ↗</a>
+                    </div>
+                </form>
+            </section>
+
+            <section class="profile-editor-block is-security">
+                <header class="profile-editor-head">
+                    <h2>Password</h2>
+                    <p>Change it with your current password.</p>
+                </header>
+                <form method="post" asp-controller="Account" asp-action="ChangePassword" class="profile-details-form">
+                    <input type="hidden" name="returnTo" value="Profile" />
+                    <div class="profile-field">
+                        <label for="CurrentPassword">Current</label>
+                        <div class="password-field">
+                            <input type="password" id="CurrentPassword" name="CurrentPassword" autocomplete="current-password" required />
+                            <button type="button" class="password-toggle" data-password-target="CurrentPassword" aria-controls="CurrentPassword" aria-label="Show current password" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/><path class="eye-slash" d="m3 3 18 18"/></svg><span>Show</span></button>
+                        </div>
+                    </div>
+                    <div class="profile-field">
+                        <label for="NewPassword">New</label>
+                        <div class="password-field">
+                            <input type="password" id="NewPassword" name="NewPassword" autocomplete="new-password" required minlength="8" />
+                            <button type="button" class="password-toggle" data-password-target="NewPassword" aria-controls="NewPassword" aria-label="Show new password" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/><path class="eye-slash" d="m3 3 18 18"/></svg><span>Show</span></button>
+                        </div>
+                    </div>
+                    <div class="profile-field">
+                        <label for="ConfirmPassword">Confirm</label>
+                        <div class="password-field">
+                            <input type="password" id="ConfirmPassword" name="ConfirmPassword" autocomplete="new-password" required minlength="8" />
+                            <button type="button" class="password-toggle" data-password-target="ConfirmPassword" aria-controls="ConfirmPassword" aria-label="Show confirm password" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/><path class="eye-slash" d="m3 3 18 18"/></svg><span>Show</span></button>
+                        </div>
+                    </div>
+                    <small class="field-help">8+ characters with upper, lower, number, and symbol.</small>
+                    <div class="profile-editor-actions">
+                        <button class="button secondary" type="submit">Update password</button>
+                    </div>
+                </form>
+            </section>
+        </div>
+    </article>
+</section>

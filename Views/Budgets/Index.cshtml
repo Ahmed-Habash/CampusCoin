@@ -1,0 +1,53 @@
+@model DashboardViewModel
+@{
+    ViewData["Title"] = "Budgets";
+    string Money(decimal n) => Currency.Format(n);
+    ViewData["HeaderEyebrow"] = "Plan the month";
+    ViewData["HeaderTitle"] = "Budgets";
+    ViewData["HeaderLead"] = "Set limits for what matters.";
+    ViewData["HeaderPrimaryText"] = "＋ Set a budget";
+    ViewData["HeaderPrimaryController"] = "Budgets";
+    ViewData["HeaderPrimaryAction"] = "Edit";
+}
+<partial name="_PageHeader" />
+<div class="period-line">
+    <h2>@Model.Month.ToString("MMMM yyyy")</h2>
+    <form method="get" class="month-picker">
+        <label for="month">Month</label>
+        <input name="month" id="month" type="month" aria-label="Month" value="@Model.Month.ToString("yyyy-MM")" />
+        <button class="button secondary small">View</button>
+    </form>
+</div>
+@if (Model.Budgets.Count == 0)
+{
+    <section class="panel">
+        @{
+            ViewData["EmptyTitle"] = "Your next good habit starts here.";
+            ViewData["EmptyBody"] = "Choose an expense category and give it a monthly limit.";
+            ViewData["EmptyActionText"] = "Set your first budget";
+            ViewData["EmptyActionController"] = "Budgets";
+            ViewData["EmptyActionAction"] = "Edit";
+        }
+        <partial name="_EmptyState" />
+    </section>
+}
+else
+{
+    <div class="budget-grid">
+        @foreach (var b in Model.Budgets)
+        {
+            <article class="panel budget-card">
+                <div class="panel-heading">
+                    <h2>@b.Category</h2>
+                    <span class="status-chip @(b.Percent >= 100 ? "is-danger" : b.Percent >= 80 ? "is-warn" : "is-ok")">
+                        @(b.Percent >= 100 ? "Over budget" : b.Percent >= 80 ? "Near limit" : "On track")
+                    </span>
+                </div>
+                <div class="budget-amount">@Money(b.Spent)<span> / @Money(b.Limit)</span></div>
+                <progress value="@Math.Min(b.Percent, 100)" max="100" class="@(b.Percent >= 100 ? "over" : "")" aria-label="@b.Category budget used"></progress>
+                <p class="muted">@(b.Limit >= b.Spent ? $"{Money(b.Limit - b.Spent)} left to spend" : $"{Money(b.Spent - b.Limit)} above your budget") · @b.Percent.ToString("0")% used</p>
+                <a class="text-link" asp-action="Edit" asp-route-id="@b.Id">Adjust budget ↗</a>
+            </article>
+        }
+    </div>
+}

@@ -1,0 +1,76 @@
+@model DashboardViewModel
+@{
+    var monthValue = Model.Month.ToString("yyyy-MM");
+}
+<article class="panel whatif-card">
+    <div class="panel-heading">
+        <div>
+            <h2>What If?</h2>
+            <p>Simulate cuts, pauses, or extra income</p>
+        </div>
+        <span class="pill whatif-pill">Simulator</span>
+    </div>
+    <p class="whatif-card-copy">Preview how a habit change shifts your projected month-end balance — before vs after.</p>
+    <button type="button" class="button whatif-open-btn" data-open-whatif>Open simulator <span>↗</span></button>
+</article>
+
+<div id="whatif-modal" class="modal-overlay" hidden aria-hidden="true">
+    <div class="modal-dialog whatif-dialog" role="dialog" aria-modal="true" aria-labelledby="whatif-title">
+        <div class="afford-dialog-head">
+            <div>
+                <span class="tiny-label">SCENARIO LAB</span>
+                <h3 id="whatif-title">What If?</h3>
+            </div>
+            <button type="button" class="afford-close" data-close-whatif aria-label="Close">✕</button>
+        </div>
+        <p class="afford-lead">Pick a scenario. We’ll recalculate this month’s balance and show a clear before vs after.</p>
+        <form id="whatif-form" class="whatif-form" data-month="@monthValue" novalidate>
+            <label for="whatif-scenario">Scenario</label>
+            <select id="whatif-scenario" name="scenario">
+                <option value="stop_category">Stop a category for N days</option>
+                <option value="reduce_category">Reduce a category by %</option>
+                <option value="extra_income">Get extra income</option>
+            </select>
+            <div id="whatif-category-wrap">
+                <label for="whatif-category">Category</label>
+                <select id="whatif-category" name="categoryId">
+                    <option value="">Select category</option>
+                    @foreach (var cat in Model.AffordCategories)
+                    {
+                        <option value="@cat.Id">@cat.Name</option>
+                    }
+                </select>
+            </div>
+            <div class="whatif-row">
+                <div id="whatif-days-wrap">
+                    <label for="whatif-days">Days</label>
+                    <input id="whatif-days" type="number" min="1" max="31" value="14" />
+                </div>
+                <div id="whatif-percent-wrap" hidden>
+                    <label for="whatif-percent">Reduce by %</label>
+                    <input id="whatif-percent" type="number" min="1" max="100" value="50" />
+                </div>
+                <div id="whatif-amount-wrap" hidden>
+                    <label for="whatif-amount">Extra income</label>
+                    <input id="whatif-amount" type="number" min="0.01" step="0.01" placeholder="2000" />
+                </div>
+            </div>
+            <div class="whatif-actions">
+                <button type="button" class="button secondary" data-close-whatif>Cancel</button>
+                <button type="submit" class="button" id="whatif-submit">Run scenario</button>
+            </div>
+        </form>
+        <div id="whatif-result" class="whatif-result" hidden>
+            <strong data-whatif-label></strong>
+            <p data-whatif-explain></p>
+            <span class="whatif-delta" data-whatif-delta></span>
+            <div class="whatif-compare">
+                <article><span>Before</span><strong data-whatif-before>—</strong></article>
+                <div class="arrow">→</div>
+                <article><span>After</span><strong data-whatif-after>—</strong></article>
+            </div>
+            <p data-whatif-budget hidden></p>
+            <button type="button" class="button secondary small" data-whatif-again>Try another scenario</button>
+        </div>
+    </div>
+</div>

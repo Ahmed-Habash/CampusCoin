@@ -1,0 +1,45 @@
+/* Can I Afford It? — Overview only */
+.afford-card{display:flex;flex-direction:column;gap:14px}
+.afford-pill{background:rgba(121,242,199,.22)!important;color:#08111f!important}
+.afford-card-copy{margin:0;font-size:13px;line-height:1.55;color:var(--muted)}
+.afford-open-btn{align-self:flex-start;margin-top:auto}
+
+.afford-modal .afford-dialog{width:min(92%,440px);padding:26px 26px 22px;max-height:min(92vh,640px);overflow:auto;cursor:auto;pointer-events:all}
+.afford-dialog-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:8px}
+.afford-dialog-head h3{margin:4px 0 0;font-size:22px;letter-spacing:-.7px;color:var(--ink)}
+.afford-close{background:none;border:none;color:var(--muted);font-size:20px;cursor:pointer;line-height:1;padding:2px 4px;border-radius:8px}
+.afford-close:hover{color:var(--ink);background:rgba(255,255,255,.06)}
+.afford-lead{margin:0 0 18px;font-size:12px;line-height:1.6;color:var(--muted)}
+
+.afford-form{display:grid;gap:8px}
+.afford-form label{font-size:11px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;color:var(--muted)}
+.afford-form label small{text-transform:none;font-weight:550;letter-spacing:0;opacity:.8}
+.afford-money{display:flex;align-items:center;gap:8px;background:rgba(255,255,255,.04);border:1px solid var(--line);border-radius:14px;padding:10px 14px}
+.afford-money span{color:var(--signal,#79f2c7);font-weight:800}
+.afford-money input{flex:1;background:transparent;border:none;outline:none;color:var(--ink);font-size:20px;font-weight:750;letter-spacing:-.4px;min-width:0}
+.afford-form select{appearance:none;background:rgba(255,255,255,.04);border:1px solid var(--line);border-radius:14px;padding:12px 14px;color:var(--ink);font-size:14px;margin-bottom:6px}
+.afford-actions{display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap;margin-top:8px}
+.afford-actions .button{min-height:42px}
+
+.afford-result{margin-top:4px;display:grid;gap:10px;animation:afford-in .28s ease}
+.afford-verdict-pill{display:inline-flex;align-self:flex-start;padding:5px 10px;border-radius:999px;font-size:10px;font-weight:800;letter-spacing:.5px;text-transform:uppercase}
+.afford-verdict-pill[data-verdict=Easy]{background:rgba(121,242,199,.18);color:#79f2c7;border:1px solid rgba(121,242,199,.35)}
+.afford-verdict-pill[data-verdict=Yes]{background:rgba(121,242,199,.12);color:#9af7d5;border:1px solid rgba(121,242,199,.25)}
+.afford-verdict-pill[data-verdict=Caution]{background:rgba(244,211,94,.12);color:#f4d35e;border:1px solid rgba(244,211,94,.35)}
+.afford-verdict-pill[data-verdict=No]{background:rgba(232,180,160,.12);color:#e8b4a0;border:1px solid rgba(232,180,160,.35)}
+.afford-headline{font-size:17px;letter-spacing:-.4px;line-height:1.35;color:var(--ink)}
+.afford-detail{margin:0;font-size:12px;line-height:1.6;color:var(--muted)}
+.afford-facts{margin:4px 0 0;display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.afford-facts div{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:12px;padding:10px 12px}
+.afford-facts dt{font-size:9px;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);margin:0}
+.afford-facts dd{margin:4px 0 0;font-size:13px;font-weight:750;color:var(--ink)}
+.afford-again{justify-self:start;margin-top:4px}
+
+@keyframes afford-in{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+
+@media (max-width:620px){
+  .afford-modal .afford-dialog{width:min(96%,440px);padding:22px 18px 18px;border-radius:20px}
+  .afford-facts{grid-template-columns:1fr}
+  .afford-actions{flex-direction:column-reverse}
+  .afford-actions .button{width:100%}
+}

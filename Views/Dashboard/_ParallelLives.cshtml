@@ -1,0 +1,24 @@
+@model CampusCoin.ViewModels.ParallelLivesViewModel?
+@if (Model != null && !Model.Hidden)
+{
+<article class="panel fy-dash-lives">
+    <div class="panel-heading">
+        <div>
+            <span class="tiny-label">PARALLEL LIVES</span>
+            <h2>Two paths from your real habits</h2>
+            <p>Empathetic snapshots — estimates, not destiny.</p>
+        </div>
+    </div>
+    <div class="fy-lives">
+        <div>
+            <span class="tiny-label">LIFE A · CURRENT PATH</span>
+            <p>@Model.LifeA</p>
+        </div>
+        <div>
+            <span class="tiny-label">LIFE B · IMPROVED PATH</span>
+            <p>@Model.LifeB</p>
+        </div>
+    </div>
+    <a class="text-link" asp-controller="FutureYou" asp-action="Index" style="display:inline-block;margin-top:12px;">Explore in Future You ↗</a>
+</article>
+}

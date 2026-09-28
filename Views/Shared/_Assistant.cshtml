@@ -1,0 +1,226 @@
+<style id="ask-coin-critical">
+/* Critical Ask Coin layout — kept in the partial so it always ships with the markup */
+#assistant-panel.assistant-panel{
+  display:flex;flex-direction:column;
+}
+#assistant-panel.is-open[hidden]{display:flex!important}
+#assistant-intro{
+  overflow:hidden;
+}
+#assistant-panel.is-chatting #assistant-intro,
+#assistant-intro.is-hidden,
+#assistant-intro[hidden]{
+  display:none!important;
+  max-height:0!important;
+  margin:0!important;
+  padding:0!important;
+  opacity:0!important;
+  visibility:hidden!important;
+  pointer-events:none!important;
+}
+#assistant-panel.is-chatting .assistant-message[data-welcome="true"],
+#assistant-panel.is-chatting .assistant-turn[data-welcome="true"]{display:none!important}
+#assistant-messages{
+  display:flex;flex-direction:column;gap:10px;
+  overflow-x:hidden;min-width:0;max-width:100%;
+}
+#assistant-messages .assistant-turn{
+  display:flex;flex-direction:column;gap:4px;min-width:0;max-width:100%;
+}
+#assistant-messages .assistant-turn-user{align-items:flex-end}
+#assistant-messages .assistant-turn-bot{align-items:flex-start}
+#assistant-messages .assistant-message{
+  max-width:min(92%,100%)!important;
+  min-width:0!important;
+  width:fit-content;
+  box-sizing:border-box;
+  white-space:pre-wrap!important;
+  overflow-wrap:anywhere!important;
+  word-break:break-word!important;
+  font-size:12px!important;
+  line-height:1.45!important;
+}
+#assistant-messages .assistant-message-body{
+  min-width:0!important;
+  max-width:100%!important;
+  white-space:pre-wrap!important;
+  overflow-wrap:anywhere!important;
+  word-break:break-word!important;
+}
+#assistant-messages .assistant-message-actions{
+  display:flex;gap:2px;margin:0;opacity:0;pointer-events:none;
+  transition:opacity .15s ease;
+}
+#assistant-messages .assistant-turn:hover .assistant-message-actions,
+#assistant-messages .assistant-turn:focus-within .assistant-message-actions{
+  opacity:1;pointer-events:auto;
+}
+#assistant-messages .assistant-message-actions button{
+  width:26px;height:26px;border:0;border-radius:8px;padding:0;margin:0;
+  background:transparent;color:var(--muted);opacity:.8;cursor:pointer;
+  display:inline-grid;place-items:center;appearance:none;
+}
+#assistant-messages .assistant-turn-user .assistant-message-actions button{color:var(--muted)}
+#assistant-messages .assistant-message-actions button:hover{
+  opacity:1;background:var(--paper);color:var(--ink);
+}
+#assistant-panel.is-chatting .assistant-turn[data-welcome="true"]{display:none!important}
+#assistant-composer.assistant-composer{
+  position:relative!important;
+  display:flex!important;
+  align-items:flex-end!important;
+  gap:0!important;
+  min-height:48px!important;
+  margin:0!important;
+  padding:8px 48px 8px 14px!important;
+  border:1.5px solid var(--line-strong, #d0d7e2)!important;
+  border-radius:16px!important;
+  background:var(--paper, #f4f7fb)!important;
+  box-sizing:border-box!important;
+}
+#assistant-message{
+  flex:1 1 auto!important;
+  min-width:0!important;
+  width:100%!important;
+  max-width:100%!important;
+  border:0!important;
+  outline:0!important;
+  box-shadow:none!important;
+  background:transparent!important;
+  border-radius:0!important;
+  padding:6px 0!important;
+  margin:0!important;
+  resize:none!important;
+  white-space:pre-wrap!important;
+  overflow-wrap:anywhere!important;
+  word-break:break-word!important;
+  font-size:13px!important;
+  line-height:1.45!important;
+  color:var(--ink, #0f172a)!important;
+}
+#assistant-send,
+#assistant-stop{
+  position:absolute!important;
+  right:7px!important;
+  bottom:7px!important;
+  width:34px!important;
+  height:34px!important;
+  min-width:34px!important;
+  min-height:34px!important;
+  padding:0!important;
+  margin:0!important;
+  border:0!important;
+  border-radius:999px!important;
+  display:inline-grid!important;
+  place-items:center!important;
+  place-content:center!important;
+  cursor:pointer!important;
+  line-height:0!important;
+  font-size:0!important;
+  -webkit-appearance:none!important;
+  appearance:none!important;
+  box-shadow:none!important;
+  z-index:3!important;
+}
+#assistant-send{
+  background:#2563eb!important;
+  color:#fff!important;
+  box-shadow:0 4px 12px rgba(37,99,235,.3)!important;
+}
+#assistant-send svg{
+  display:block!important;
+  width:18px!important;
+  height:18px!important;
+  stroke:#fff!important;
+}
+#assistant-stop{
+  background:#e8ecf2!important;
+  color:#111827!important;
+}
+#assistant-stop .assistant-stop-icon{
+  width:11px;height:11px;border-radius:2.5px;background:#111827;display:block;
+}
+#assistant-send[hidden],
+#assistant-stop[hidden]{display:none!important}
+#assistant-panel.is-busy #assistant-send{display:none!important}
+#assistant-panel.is-busy #assistant-stop{display:inline-grid!important}
+</style>
+<div class="assistant-dock" id="assistant-dock" aria-hidden="false">
+    <button class="assistant-launcher" id="assistant-launcher" type="button" aria-label="Open Ask Coin" aria-expanded="false" aria-controls="assistant-panel">
+        <span class="assistant-spark-badge" aria-hidden="true"><span class="assistant-spark">✦</span></span>
+        <span class="assistant-launcher-label">Ask Coin</span>
+    </button>
+</div>
+<aside class="assistant-panel" id="assistant-panel" aria-label="Ask Coin assistant" hidden>
+    <header class="assistant-header">
+        <div class="assistant-brand">
+            <span class="assistant-brand-mark" aria-hidden="true">✦</span>
+            <div class="assistant-brand-copy">
+                <span class="assistant-kicker">Ask Coin</span>
+                <h2>Your money, plainly</h2>
+            </div>
+        </div>
+        <div class="assistant-header-actions">
+            <button class="assistant-tool" id="assistant-history-btn" type="button" aria-label="Chat history" aria-expanded="false" title="History">
+                <svg viewBox="0 0 16 16" width="15" height="15" aria-hidden="true" focusable="false"><path d="M8 3.2v4.6l2.8 1.6" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><circle cx="8" cy="8" r="5.6" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>
+                <span class="assistant-history-count" id="assistant-history-count" hidden>0</span>
+            </button>
+            <button class="assistant-tool" id="assistant-new-btn" type="button" aria-label="New chat" title="New chat">
+                <svg viewBox="0 0 16 16" width="15" height="15" aria-hidden="true" focusable="false"><path d="M8 3.2v9.6M3.2 8h9.6" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
+            </button>
+            <button class="assistant-close" id="assistant-close" type="button" aria-label="Close assistant">
+                <svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true" focusable="false">
+                    <path d="M4 4l8 8M12 4l-8 8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                </svg>
+            </button>
+        </div>
+    </header>
+    <div class="assistant-history" id="assistant-history" hidden>
+        <div class="assistant-history-head">
+            <strong>Saved chats</strong>
+            <button type="button" class="text-button" id="assistant-history-clear">Clear all</button>
+        </div>
+        <div class="assistant-history-list" id="assistant-history-list"></div>
+        <p class="assistant-history-empty" id="assistant-history-empty">No saved chats yet.</p>
+    </div>
+    <div class="assistant-body">
+        <div class="assistant-intro" id="assistant-intro">
+            <p class="assistant-privacy">Ask about your account, budgets, or how to use Campus Coin. Answers stay grounded in your data — not the open web.</p>
+            <div class="assistant-suggestions">
+                <button type="button" data-assistant-suggestion="How much did I spend this month?">This month’s spending</button>
+                <button type="button" data-assistant-suggestion="What is my balance this month?">My balance</button>
+                <button type="button" data-assistant-suggestion="How do I add a transaction?">Add a transaction</button>
+            </div>
+        </div>
+        <div class="assistant-messages" id="assistant-messages" aria-live="polite">
+            <div class="assistant-turn assistant-turn-bot" data-welcome="true">
+                <div class="assistant-message assistant-message-bot" data-welcome="true">
+                    <div class="assistant-message-body">Hi! Ask me about your spending, budgets, groups, or how to use Campus Coin. I’ll answer from your account.</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <form class="assistant-form" id="assistant-form" autocomplete="off">
+        @Html.AntiForgeryToken()
+        <div class="assistant-composer" id="assistant-composer">
+            <textarea name="Message" id="assistant-message" maxlength="400" rows="1" autocomplete="off" placeholder="Ask about your money…" aria-label="Ask the assistant"></textarea>
+            <button type="submit" class="assistant-send" id="assistant-send" aria-label="Send" style="background:#2563eb;color:#fff;border:0;border-radius:999px;width:34px;height:34px;padding:0;display:inline-grid;place-items:center;">
+                <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" focusable="false">
+                    <path d="M12 19V5M12 5l-6 6M12 5l6 6" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+            </button>
+            <button type="button" class="assistant-stop" id="assistant-stop" aria-label="Stop" hidden style="background:#e8ecf2;border:0;border-radius:999px;width:34px;height:34px;padding:0;display:inline-grid;place-items:center;">
+                <span class="assistant-stop-icon" aria-hidden="true"></span>
+            </button>
+        </div>
+    </form>
+</aside>
+<script>
+(() => {
+  // Force-unregister stale service workers that were serving old Ask Coin markup.
+  if (!('serviceWorker' in navigator)) return;
+  navigator.serviceWorker.getRegistrations().then(regs => {
+    regs.forEach(r => r.update());
+  }).catch(() => {});
+})();
+</script>

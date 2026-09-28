@@ -1,0 +1,47 @@
+@model DashboardViewModel
+@{
+    var monthValue = Model.Month.ToString("yyyy-MM");
+}
+<div id="afford-modal" class="modal-overlay afford-modal" hidden aria-hidden="true">
+    <div class="modal-dialog afford-dialog" role="dialog" aria-modal="true" aria-labelledby="afford-title">
+        <div class="afford-dialog-head">
+            <div>
+                <span class="tiny-label">SPEND CHECK</span>
+                <h3 id="afford-title">Can I Afford It?</h3>
+            </div>
+            <button type="button" class="afford-close" data-close-afford aria-label="Close">✕</button>
+        </div>
+        <p class="afford-lead">Enter an amount and optional category. We’ll weigh your month balance, remaining budget, and upcoming recurring expenses.</p>
+        <form id="afford-form" class="afford-form" data-month="@monthValue" novalidate>
+            <label for="afford-amount">Amount</label>
+            <div class="money-input afford-money">
+                <span>@Currency.Symbol</span>
+                <input id="afford-amount" name="amount" type="number" min="0.01" step="0.01" inputmode="decimal" placeholder="799" required autocomplete="off" />
+            </div>
+            <label for="afford-category">Category <small>(optional)</small></label>
+            <select id="afford-category" name="categoryId">
+                <option value="">Any / general spend</option>
+                @foreach (var cat in Model.AffordCategories)
+                {
+                    <option value="@cat.Id">@cat.Name</option>
+                }
+            </select>
+            <div class="afford-actions">
+                <button type="button" class="button secondary" data-close-afford>Cancel</button>
+                <button type="submit" class="button" id="afford-submit">Can I afford this?</button>
+            </div>
+        </form>
+        <div id="afford-result" class="afford-result" hidden>
+            <span class="afford-verdict-pill" data-verdict></span>
+            <strong class="afford-headline"></strong>
+            <p class="afford-detail"></p>
+            <dl class="afford-facts">
+                <div><dt>Month balance</dt><dd data-fact="balance">—</dd></div>
+                <div><dt>Upcoming recurrings</dt><dd data-fact="recurring">—</dd></div>
+                <div><dt>Free after bills</dt><dd data-fact="available">—</dd></div>
+                <div data-budget-row hidden><dt>Budget left</dt><dd data-fact="budget">—</dd></div>
+            </dl>
+            <button type="button" class="button secondary small afford-again" data-afford-again>Check another amount</button>
+        </div>
+    </div>
+</div>

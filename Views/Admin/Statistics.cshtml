@@ -1,0 +1,163 @@
+@model AdminDashboardViewModel
+@{
+    ViewData["Title"] = "System Statistics";
+}
+
+<div class="page-heading">
+    <div>
+        <span class="eyebrow">ANALYTICS & METRICS</span>
+        <h1>System Statistics</h1>
+        <p>Comprehensive overview of platform usage, accounts, transactions, and category distributions.</p>
+    </div>
+</div>
+
+<section class="stat-grid" style="grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); margin-bottom: 24px;">
+    <article class="stat-card">
+        <div class="stat-label">Total Platform Users</div>
+        <strong>@Model.TotalUsers</strong>
+        <span class="stat-caption">@Model.ActiveUsers active · @Model.DisabledUsers disabled</span>
+    </article>
+    <article class="stat-card stat-card-light">
+        <div class="stat-label">Total Personal Transactions</div>
+        <strong>@Model.TotalTransactions</strong>
+        <span class="stat-caption">@Model.TotalIncomeTransactions income · @Model.TotalExpenseTransactions expenses</span>
+    </article>
+    <article class="stat-card">
+        <div class="stat-label">Active Roommate Groups</div>
+        <strong>@(ViewBag.TotalActiveGroups ?? 0)</strong>
+        <span class="stat-caption">Avg size: @(ViewBag.AvgGroupSize ?? 0) members · @(ViewBag.PctUsersInGroup ?? 0)% users in groups</span>
+    </article>
+    <article class="stat-card stat-card-light">
+        <div class="stat-label">Shared Expenses Logged</div>
+        <strong>@(ViewBag.TotalSharedExpensesMonth ?? 0)</strong>
+        <span class="stat-caption">this month · @(ViewBag.TotalSharedExpensesAllTime ?? 0) all-time · @(ViewBag.SettleUpCount ?? 0) settle-up notes</span>
+    </article>
+</section>
+
+@{
+    var fyStats = ViewBag.FutureYouStats as CampusCoin.ViewModels.FutureYouAdminStatsViewModel;
+}
+@if (fyStats != null)
+{
+<section class="stat-grid" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); margin-bottom: 24px;">
+    <article class="stat-card">
+        <div class="stat-label">Future You explorers</div>
+        <strong>@fyStats.DistinctSimulatorUsers</strong>
+        <span class="stat-caption">@fyStats.SimulatorOpens opens (anonymized counts)</span>
+    </article>
+    <article class="stat-card stat-card-light">
+        <div class="stat-label">Challenges started</div>
+        <strong>@fyStats.ChallengesStarted</strong>
+        <span class="stat-caption">@fyStats.ChallengesCompleted completed · avg @fyStats.AverageChallengeCompletionPercent% progress</span>
+    </article>
+</section>
+
+<section class="panel" style="margin-bottom:28px;">
+    <div class="panel-heading">
+        <div>
+            <h2>30-Day Challenge templates</h2>
+            <p class="muted">Default micro-goals students can receive. Personal simulations stay private.</p>
+        </div>
+    </div>
+    <form asp-action="SaveChallengeTemplate" method="post" style="display:grid;grid-template-columns:1fr 1.4fr auto;gap:10px;margin-bottom:16px;align-items:end;">
+        @Html.AntiForgeryToken()
+        <div>
+            <label style="font-size:12px;font-weight:700;">Title</label>
+            <input name="title" class="form-control" required maxlength="80" style="min-height:40px;" />
+        </div>
+        <div>
+            <label style="font-size:12px;font-weight:700;">Micro-goal text</label>
+            <input name="microGoalTemplate" class="form-control" required maxlength="220" style="min-height:40px;" />
+        </div>
+        <button type="submit" class="button small">Add template</button>
+        <input type="hidden" name="patternKey" value="General" />
+    </form>
+    @if (fyStats.Templates.Count == 0)
+    {
+        <p class="muted">No templates yet.</p>
+    }
+    else
+    {
+        <div style="display:grid;gap:8px;">
+            @foreach (var t in fyStats.Templates)
+            {
+                <div style="display:flex;justify-content:space-between;gap:12px;align-items:center;padding:10px 12px;border:1px solid var(--line);border-radius:12px;">
+                    <div>
+                        <strong style="font-size:13px;">@t.Title</strong>
+                        <div class="muted" style="font-size:12px;">@t.MicroGoalTemplate</div>
+                    </div>
+                    <form asp-action="ToggleChallengeTemplate" asp-route-id="@t.Id" method="post">
+                        @Html.AntiForgeryToken()
+                        <button type="submit" class="button secondary small">@(t.IsActive ? "Disable" : "Enable")</button>
+                    </form>
+                </div>
+            }
+        </div>
+    }
+</section>
+}
+
+<section class="chart-grid admin-stats-pair" style="margin-bottom: 28px;">
+    <article class="panel admin-stats-panel">
+        <h2>Expense Category Distribution</h2>
+        <p class="muted">Default platform categories only — personal student categories stay private</p>
+        @if (Model.CategoryLabels.Length > 0)
+        {
+            <div class="admin-category-bars">
+                @for (int i = 0; i < Model.CategoryLabels.Length; i++)
+                {
+                    var label = Model.CategoryLabels[i];
+                    var count = Model.CategoryCounts[i];
+                    var pct = Model.CategoryPercentages[i];
+                    <div class="admin-category-row">
+                        <div class="admin-category-row-meta">
+                            <span>@label</span>
+                            <span>@pct% <small>(@count transactions)</small></span>
+                        </div>
+                        <div class="admin-category-track">
+                            <div class="admin-category-fill" style="width: @pct%;"></div>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+        else
+        {
+            <div class="empty-state" style="padding:24px 12px;">
+                <p>No platform expense statistics yet.</p>
+            </div>
+        }
+    </article>
+
+    <article class="panel admin-stats-panel admin-activity-panel">
+        <h2>Activity Log</h2>
+        <p class="muted">Last 25 changes — search by email, name, or action</p>
+        <form method="get" asp-action="Statistics" class="activity-search" style="display:flex;gap:8px;margin-top:12px;">
+            <input type="text" name="q" value="@ViewBag.ActivitySearch" placeholder="Search email, name, or action…" style="flex:1;min-height:38px;" />
+            <button type="submit" class="button small">Search</button>
+            @if (!string.IsNullOrWhiteSpace(ViewBag.ActivitySearch as string))
+            {
+                <a asp-action="Statistics" class="button secondary small">Clear</a>
+            }
+        </form>
+        <div class="admin-activity-list">
+            @if (Model.RecentLogs.Count == 0)
+            {
+                <p class="muted" style="margin:0;">No matching activity yet.</p>
+            }
+            else
+            {
+                @foreach (var log in Model.RecentLogs)
+                {
+                    <div class="admin-activity-item">
+                        <div>
+                            <strong>@log.AdminEmail</strong>
+                            <span>@log.Action: <em>@log.Target</em></span>
+                        </div>
+                        <small>@log.Timestamp.ToLocalTime().ToString("yyyy-MM-dd HH:mm")</small>
+                    </div>
+                }
+            }
+        </div>
+    </article>
+</section>

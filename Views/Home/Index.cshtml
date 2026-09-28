@@ -1,0 +1,234 @@
+@{ ViewData["Title"]="Student money, simplified"; }
+
+<section class="cc-hero is-inview" aria-label="Campus Coin">
+    <div class="cc-hero-bg" aria-hidden="true">
+        <span class="cc-hero-wash"></span>
+        <span class="cc-hero-aurora"></span>
+        <span class="cc-orb cc-orb-a"></span>
+        <span class="cc-orb cc-orb-b"></span>
+        <span class="cc-hero-grid"></span>
+        <span class="cc-hero-vignette"></span>
+    </div>
+    <div class="cc-hero-stage">
+        <div class="cc-hero-inner">
+            <div class="cc-wordmark" aria-label="Campus Coin"><span class="brand-icon">c</span><span>campus<span class="brand-light">coin</span></span></div>
+            <h1 class="cc-title">
+                <span class="cc-line"><span>Campus money,</span></span>
+                <span class="cc-line cc-line-soft"><span>finally clear.</span></span>
+            </h1>
+            <p class="cc-hero-copy">Track spending, budgets, and goals in one place — built for student life, not bank jargon.</p>
+            <div class="cc-hero-actions">
+                <a class="button" asp-controller="Account" asp-action="Register">Create free account</a>
+                <a class="text-link" asp-controller="Account" asp-action="Login">I already have an account →</a>
+            </div>
+            <p class="cc-trust" data-reveal="up">No bank link · Free for students · Export anytime</p>
+        </div>
+        <div class="cc-hero-visual is-inview" aria-hidden="true" data-hero-visual>
+            <div class="cc-visual-ring"></div>
+            <aside class="cc-float cc-float-safe">
+                <small>Safe today</small>
+                <strong>$18.40</strong>
+            </aside>
+            <aside class="cc-float cc-float-in">
+                <small>Income</small>
+                <strong>+$180</strong>
+            </aside>
+            <div class="cc-device cc-device-app">
+                <div class="cc-device-chrome">
+                    <span></span><span></span><span></span>
+                    <em>Overview</em>
+                </div>
+                <div class="cc-app-shot">
+                    <div class="cc-app-safe">
+                        <small>Safe to spend</small>
+                        <strong>$18.40<span>/ day</span></strong>
+                        <i><b style="width:62%"></b></i>
+                    </div>
+                    <div class="cc-app-stats">
+                        <div><small>Balance</small><b>$785.51</b></div>
+                        <div><small>In</small><b class="pos">$960</b></div>
+                        <div><small>Out</small><b>$174.49</b></div>
+                    </div>
+                    <div class="cc-app-list">
+                        <div><span>Campus café</span><em>−$6.50</em></div>
+                        <div class="is-in"><span>Part-time shift</span><em>+$180</em></div>
+                        <div><span>Course materials</span><em>−$24.90</em></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="cc-section cc-why" id="why-campus-coin" data-reveal-section>
+    <div class="cc-why-copy" data-reveal="up">
+        <span class="eyebrow">Why Campus Coin</span>
+        <h2>One calm system for everyday campus money.</h2>
+        <p class="cc-lead">No bank connection. No clutter. Just a clear picture of what came in, what went out, and what is safe to spend.</p>
+    </div>
+    <div class="cc-strip" data-reveal-strip>
+        <article class="cc-feature" style="--i:0">
+            <span class="cc-num" aria-hidden="true">01</span>
+            <h3>Track</h3>
+            <p>Log allowance, shifts, coffee, and course costs in seconds.</p>
+        </article>
+        <article class="cc-feature" style="--i:1">
+            <span class="cc-num" aria-hidden="true">02</span>
+            <h3>Plan</h3>
+            <p>Set category budgets and see what is safe to spend today.</p>
+        </article>
+        <article class="cc-feature" style="--i:2">
+            <span class="cc-num" aria-hidden="true">03</span>
+            <h3>Reflect</h3>
+            <p>Spot trends, forecasts, and small actions you can use.</p>
+        </article>
+        <article class="cc-feature" style="--i:3">
+            <span class="cc-num" aria-hidden="true">04</span>
+            <h3>Ask</h3>
+            <p>Ask Coin about your own numbers — dates, categories, budgets.</p>
+        </article>
+    </div>
+</section>
+
+<section class="home-story" id="how-it-works" data-reveal-section>
+    <div class="story-scroll-track" data-story-track>
+        <div class="story-sticky">
+            <header class="home-story-heading" data-reveal="up">
+                <span class="eyebrow">See it work</span>
+                <h2>Four tools. One money story.</h2>
+                <p>Scroll to move through each step — the preview updates as you go.</p>
+            </header>
+            <div class="story-layout" data-reveal="up" data-reveal-delay="1">
+                <div class="story-rail-col">
+                    <div class="story-steps-viewport">
+                        <div class="story-steps" data-story-rail>
+                            <button type="button" class="story-step is-active" data-story-step="track" data-story-index="0" aria-pressed="true">
+                                <span class="story-num">01</span>
+                                <div class="story-step-copy">
+                                    <span>01 / TRACK</span>
+                                    <b>Know where it goes.</b>
+                                    <p>Add income and expenses in seconds. Every entry becomes part of one searchable timeline.</p>
+                                    <i>Explore transactions ↘</i>
+                                </div>
+                            </button>
+                            <button type="button" class="story-step" data-story-step="plan" data-story-index="1" aria-pressed="false">
+                                <span class="story-num">02</span>
+                                <div class="story-step-copy">
+                                    <span>02 / PLAN</span>
+                                    <b>Give every coin a job.</b>
+                                    <p>Create flexible category budgets and see what is safe to spend before the month gets busy.</p>
+                                    <i>Shape your month ↘</i>
+                                </div>
+                            </button>
+                            <button type="button" class="story-step" data-story-step="reflect" data-story-index="2" aria-pressed="false">
+                                <span class="story-num">03</span>
+                                <div class="story-step-copy">
+                                    <span>03 / REFLECT</span>
+                                    <b>Notice the pattern.</b>
+                                    <p>Turn everyday choices into trends, forecasts, and small actions you can actually use.</p>
+                                    <i>See the bigger picture ↘</i>
+                                </div>
+                            </button>
+                            <button type="button" class="story-step" data-story-step="ask" data-story-index="3" aria-pressed="false">
+                                <span class="story-num">04</span>
+                                <div class="story-step-copy">
+                                    <span>04 / ASK COIN</span>
+                                    <b>Ask about your own numbers.</b>
+                                    <p>Get account-aware answers about dates, categories, budgets, and what your plans may cost.</p>
+                                    <i>Meet your money copilot →</i>
+                                </div>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="story-scroll-progress" aria-hidden="true"><i data-story-progress></i></div>
+                </div>
+                <div class="story-preview-wrap">
+                    <div class="story-preview" aria-live="polite">
+                        <div class="story-preview-top">
+                            <div class="story-preview-dots">
+                                <button type="button" aria-label="View Track preview" data-dot-step="track"><i></i></button>
+                                <button type="button" aria-label="View Plan preview" data-dot-step="plan"><i></i></button>
+                                <button type="button" aria-label="View Reflect preview" data-dot-step="reflect"><i></i></button>
+                                <button type="button" aria-label="View Ask Coin preview" data-dot-step="ask"><i></i></button>
+                            </div>
+                            <span id="story-preview-label">LIVE PREVIEW · TRACK</span>
+                        </div>
+                        <div class="story-preview-screen">
+                            <article class="story-panel is-active" data-story-panel="track">
+                                <div class="preview-balance"><span>Available this month</span><strong>$785.51</strong><small>Income minus expenses</small></div>
+                                <div class="preview-list">
+                                    <div><b>·</b><span><strong>Campus café</strong><small>Food · Today</small></span><em>− $6.50</em></div>
+                                    <div><b>·</b><span><strong>Part-time shift</strong><small>Income · Yesterday</small></span><em class="positive">+ $180.00</em></div>
+                                    <div><b>·</b><span><strong>Course materials</strong><small>Academics · Sep 22</small></span><em>− $24.90</em></div>
+                                </div>
+                            </article>
+                            <article class="story-panel" data-story-panel="plan">
+                                <div class="preview-title"><span>September plan</span><strong>72% on track</strong></div>
+                                <div class="preview-budget">
+                                    <div><span>Food <small>$142 of $220</small></span><i><b style="width:65%"></b></i></div>
+                                    <div><span>Transport <small>$58 of $100</small></span><i><b style="width:58%"></b></i></div>
+                                    <div><span>Academics <small>$86 of $160</small></span><i><b style="width:54%"></b></i></div>
+                                </div>
+                                <div class="preview-callout"><span>Safe to spend</span><strong>$18.40 / day</strong></div>
+                            </article>
+                            <article class="story-panel" data-story-panel="reflect">
+                                <div class="preview-title"><span>Six-month rhythm</span><strong>Spending is down 12%</strong></div>
+                                <div class="preview-chart" aria-hidden="true"><i style="--bar:62%"></i><i style="--bar:78%"></i><i style="--bar:54%"></i><i style="--bar:88%"></i><i style="--bar:69%"></i><i style="--bar:48%"></i></div>
+                            </article>
+                            <article class="story-panel" data-story-panel="ask">
+                                <div class="preview-title"><span>Ask Coin</span><strong>Answers from your account</strong></div>
+                                <div class="preview-chat">
+                                    <p class="chat-user">How much did I spend on food after September 15?</p>
+                                    <p class="chat-coin"><b>·</b><span>You spent <strong>$48.70</strong> across 6 food transactions after September 15.</span></p>
+                                </div>
+                            </article>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="home-capabilities" id="practical-tools" data-reveal-section data-tools-section aria-labelledby="capabilities-title">
+    <div class="capabilities-head" data-reveal="up">
+        <span class="eyebrow">Practical tools</span>
+        <h2 id="capabilities-title">Everything you need for campus money.</h2>
+        <p class="muted">Built for allowances, part-time jobs, and upcoming goals.</p>
+    </div>
+    <div class="home-capabilities-grid" data-stagger data-tools-grid>
+        <article class="capability-card" data-reveal="up" style="--i:0"><span class="capability-num">01</span><h3>Track income &amp; expenses</h3><p>Log allowance, shifts, coffee runs, and course materials with quick categorization.</p></article>
+        <article class="capability-card" data-reveal="up" style="--i:1"><span class="capability-num">02</span><h3>Spending patterns</h3><p>See six-month trends and category breakdowns that show where money actually goes.</p></article>
+        <article class="capability-card" data-reveal="up" style="--i:2"><span class="capability-num">03</span><h3>Monthly budgets</h3><p>Set limits for food, transport, or entertainment with alerts at 80% and 100%.</p></article>
+        <article class="capability-card" data-reveal="up" style="--i:3"><span class="capability-num">04</span><h3>Forecasts &amp; goals</h3><p>Preview end-of-month balance, run What-If checks, and track savings targets.</p></article>
+        <article class="capability-card" data-reveal="up" style="--i:4"><span class="capability-num">05</span><h3>Ask Coin</h3><p>Ask about dates, category totals, remaining balances, or how to use a feature.</p></article>
+        <article class="capability-card" data-reveal="up" style="--i:5"><span class="capability-num">06</span><h3>CSV &amp; PDF exports</h3><p>Download your history anytime as a spreadsheet or printable report.</p></article>
+    </div>
+</section>
+
+<section class="cc-cta" data-reveal="up">
+    <div>
+        <span class="eyebrow">Next step</span>
+        <h2>Start with one transaction.</h2>
+        <p>Campus Coin makes the picture clearer from there.</p>
+    </div>
+    <a class="button" asp-controller="Account" asp-action="Register">Create your free account</a>
+</section>
+
+<footer class="site-footer" id="sitemap" data-reveal="up">
+    <div class="site-footer-brand">
+        <a class="brand" asp-controller="Home" asp-action="Index"><span class="brand-icon">c</span><span class="brand-word">campus<span class="brand-light">coin</span></span></a>
+        <p>Money clarity for student life. No bank connection required.</p>
+    </div>
+    <nav class="site-footer-nav" aria-label="Explore">
+        <strong>Explore</strong>
+        <a asp-controller="Account" asp-action="Register">Create account</a>
+        <a asp-controller="Account" asp-action="Login">Log in</a>
+        <a asp-controller="Dashboard" asp-action="Index">Overview</a>
+        <a asp-controller="Transactions" asp-action="Index">Transactions</a>
+        <a asp-controller="Budgets" asp-action="Index">Budgets</a>
+        <a asp-controller="Insights" asp-action="Index">Insights</a>
+    </nav>
+</footer>
+
+@section Scripts {<script src="~/js/home.js" asp-append-version="true"></script>}

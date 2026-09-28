@@ -1,0 +1,280 @@
+@model SettingsViewModel
+@{ ViewData["Title"] = "Settings"; }
+<div class="settings-page">
+    <div class="page-heading settings-heading">
+        <div>
+            <span class="eyebrow">Preferences</span>
+            <h1>Settings</h1>
+            <p>Appearance, currency, features, and account — kept in one place.</p>
+        </div>
+    </div>
+
+    <div class="settings-stack">
+        <article class="panel settings-card">
+            <div class="settings-card-head">
+                <span class="settings-card-icon" aria-hidden="true">◐</span>
+                <div>
+                    <h2>Appearance &amp; currency</h2>
+                    <p>Theme, type, motion, and how money is labeled.</p>
+                </div>
+            </div>
+            <div class="settings-fields">
+                <div>
+                    <label for="setting-theme">Colour mode</label>
+                    <select id="setting-theme" data-preference="theme">
+                        <option value="system">Follow device</option>
+                        <option value="light">Light</option>
+                        <option value="dark">Dark</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="setting-text">Text size</label>
+                    <select id="setting-text" data-preference="text">
+                        <option value="normal">Comfortable</option>
+                        <option value="large">Large</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="setting-motion">Motion</label>
+                    <select id="setting-motion" data-preference="motion">
+                        <option value="full">Full experience</option>
+                        <option value="reduced">Reduce motion</option>
+                    </select>
+                </div>
+            </div>
+            <form method="post" class="currency-settings" data-currency-autosave>
+                @Html.AntiForgeryToken()
+                <input asp-for="AiProvider" type="hidden" />
+                <label asp-for="CurrencyCode"></label>
+                <select asp-for="CurrencyCode" id="CurrencyCode" data-currency-field="code">
+                    <option value="Auto">Automatic from browser region</option>
+                    <option value="QAR">QAR — Qatari riyal</option>
+                    <option value="USD">USD — US dollar</option>
+                    <option value="EUR">EUR — Euro</option>
+                    <option value="GBP">GBP — British pound</option>
+                    <option value="AED">AED — UAE dirham</option>
+                    <option value="SAR">SAR — Saudi riyal</option>
+                    <option value="PKR">PKR — Pakistani rupee</option>
+                    <option value="INR">INR — Indian rupee</option>
+                    <option value="CAD">CAD — Canadian dollar</option>
+                    <option value="AUD">AUD — Australian dollar</option>
+                </select>
+                <small class="field-help">Saved when you change it. Display label only — amounts are not converted.</small>
+                <span class="currency-save-status" aria-live="polite"></span>
+            </form>
+            @if (Model.IsAdministrator)
+            {
+                <div class="currency-settings" data-currency-autosave>
+                    <label asp-for="AdminCurrencyMode">When viewing other people&rsquo;s money</label>
+                    <select asp-for="AdminCurrencyMode" id="AdminCurrencyMode" data-currency-field="adminMode">
+                        <option value="Fixed">Use my display currency for everyone</option>
+                        <option value="PerUser">Show each user&rsquo;s chosen currency</option>
+                    </select>
+                    <small class="field-help">Saved automatically. Fixed = one currency everywhere; Per-user = each student&rsquo;s own label.</small>
+                    <span class="currency-save-status" aria-live="polite"></span>
+                </div>
+            }
+        </article>
+
+        <div class="settings-pair">
+            <article class="panel settings-card">
+                <div class="settings-card-head">
+                    <span class="settings-card-icon" aria-hidden="true">★</span>
+                    <div>
+                        <h2>Features</h2>
+                        <p>Toggle what shows while you work.</p>
+                    </div>
+                </div>
+                <div class="pref-switch-list">
+                    <div class="pref-switch-block" data-xp-autosave>
+                        @Html.AntiForgeryToken()
+                        <label class="pref-switch">
+                            <span class="pref-switch-copy">
+                                <strong>Levels &amp; XP</strong>
+                                <small>Progress bar and Lv badge. XP still tracks when off.</small>
+                            </span>
+                            <span class="pref-switch-control">
+                                <input type="checkbox" id="XpProgressEnabled" name="XpProgressEnabled" value="true" data-xp-field="enabled" @(Model.XpProgressEnabled ? "checked" : null) />
+                                <span class="pref-switch-track" aria-hidden="true"><span class="pref-switch-thumb"></span></span>
+                            </span>
+                        </label>
+                        <span class="pref-save-status xp-save-status" aria-live="polite"></span>
+                    </div>
+                    <div class="pref-switch-block" data-futureyou-autosave>
+                        <label class="pref-switch">
+                            <span class="pref-switch-copy">
+                                <strong>Future You nudges</strong>
+                                <small>Friendly coaching notes. Never blocks a transaction.</small>
+                            </span>
+                            <span class="pref-switch-control">
+                                <input type="checkbox" id="FutureYouMessagesEnabled" name="FutureYouMessagesEnabled" value="true" data-futureyou-field="enabled" @(Model.FutureYouMessagesEnabled ? "checked" : null) />
+                                <span class="pref-switch-track" aria-hidden="true"><span class="pref-switch-thumb"></span></span>
+                            </span>
+                        </label>
+                        <span class="pref-save-status futureyou-save-status" aria-live="polite"></span>
+                    </div>
+                </div>
+                <a class="settings-link-row" asp-controller="FutureYou" asp-action="Index">
+                    <span>
+                        <strong>Open Future You simulator</strong>
+                        <small>Sliders, paths, Parallel Lives</small>
+                    </span>
+                    <span class="settings-link-arrow" aria-hidden="true">↗</span>
+                </a>
+            </article>
+
+            <article class="panel settings-card">
+                <div class="settings-card-head">
+                    <span class="settings-card-icon" aria-hidden="true">⇄</span>
+                    <div>
+                        <h2>Data &amp; account</h2>
+                        <p>Exports, password, and profile.</p>
+                    </div>
+                </div>
+                <div class="settings-list">
+                    <div class="settings-list-row">
+                        <div>
+                            <strong>Financial report</strong>
+                            <span>CSV or printable PDF.</span>
+                        </div>
+                        <span class="settings-buttons">
+                            <a class="button secondary small" asp-controller="Transactions" asp-action="ExportCsv">CSV</a>
+                            <a class="button secondary small" asp-controller="Transactions" asp-action="ExportPdf">PDF</a>
+                        </span>
+                    </div>
+                    <div class="settings-list-row">
+                        <div>
+                            <strong>Password</strong>
+                            <span>Change with your current password.</span>
+                        </div>
+                        <a class="button secondary small" asp-controller="Account" asp-action="ChangePassword">Change</a>
+                    </div>
+                    <div class="settings-list-row">
+                        <div>
+                            <strong>Profile &amp; goals</strong>
+                            <span>Details and savings target.</span>
+                        </div>
+                        <a class="button secondary small" asp-controller="Profile" asp-action="Index">Open</a>
+                    </div>
+                </div>
+            </article>
+        </div>
+
+        <article class="panel settings-card">
+            <div class="settings-card-head">
+                <span class="settings-card-icon" aria-hidden="true">✦</span>
+                <div>
+                    <h2>AI connection</h2>
+                    <p>Website connection or your own provider key.</p>
+                </div>
+            </div>
+            <form method="post" class="settings-form settings-form-ai">
+                <input asp-for="CurrencyCode" type="hidden" />
+                <input asp-for="AdminCurrencyMode" type="hidden" />
+                <div asp-validation-summary="All" class="validation" role="alert"></div>
+                <div class="settings-fields settings-fields-ai">
+                    <div>
+                        <label asp-for="AiProvider">Preferred assistant</label>
+                        <select asp-for="AiProvider">
+                            <option value="Auto">Automatic — use the website connection</option>
+                            <option value="Gemini">Gemini — use my key when available</option>
+                            <option value="OpenAI">OpenAI — use my key when available</option>
+                            <option value="Local">Private local answers only</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label asp-for="ApiKey"></label>
+                        <div class="password-field">
+                            <input asp-for="ApiKey" type="password" autocomplete="off" placeholder="@(Model.HasApiKey ? "A personal key is already saved" : "Paste a Gemini or OpenAI key")" />
+                            <button type="button" class="password-toggle" data-password-target="ApiKey" aria-controls="ApiKey" aria-label="Show API key" aria-pressed="false">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/><path class="eye-slash" d="m3 3 18 18"/></svg>
+                                <span>Show</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <p class="field-help">Encrypted on this server. Never returned to the browser after saving.</p>
+                @if (Model.HasApiKey)
+                {
+                    <label class="checkbox api-remove"><input asp-for="RemoveApiKey" /> Remove my saved API key</label>
+                }
+                <div class="form-actions"><button class="button" type="submit">Save AI settings</button></div>
+            </form>
+        </article>
+
+        <div class="settings-pair settings-pair-footer">
+            <article class="panel settings-card settings-privacy">
+                <div class="settings-card-head">
+                    <span class="settings-card-icon" aria-hidden="true">◎</span>
+                    <div>
+                        <h2>Privacy</h2>
+                        <p>Your account is the boundary.</p>
+                    </div>
+                </div>
+                <ul class="settings-privacy-list">
+                    <li>AI gets a compact summary from your signed-in account only.</li>
+                    <li>Replies show whether AI or local fallback answered.</li>
+                    <li>API keys are encrypted before storage.</li>
+                    <li>No bank connection or payment access.</li>
+                </ul>
+            </article>
+
+@if (User.IsInRole("Administrator"))
+{
+            <article class="panel settings-card">
+                <div class="settings-card-head">
+                    <span class="settings-card-icon" aria-hidden="true">🛡</span>
+                    <div>
+                        <h2>Administrator</h2>
+                        <p>Tools assigned to your account.</p>
+                    </div>
+                </div>
+                <div class="admin-role-banner">
+                    <div>
+                        <strong>System Administrator</strong>
+                        <span>Navigation shows only the admin tools enabled for you.</span>
+                    </div>
+                </div>
+                <div class="settings-inline-actions">
+                    <a class="button small" asp-controller="Admin" asp-action="Index">Admin dashboard ↗</a>
+                </div>
+            </article>
+}
+else if (Model.HasPendingAdminRequest)
+{
+            <article class="panel settings-card">
+                <div class="settings-card-head">
+                    <span class="settings-card-icon" aria-hidden="true">🛡</span>
+                    <div>
+                        <h2>Administrator request</h2>
+                        <p>Waiting for review.</p>
+                    </div>
+                </div>
+                <div class="admin-pending-banner" role="status">
+                    <strong>Waiting for approval</strong>
+                    <span>You’ll get access once an admin approves it.</span>
+                </div>
+            </article>
+}
+else
+{
+            <article class="panel settings-card">
+                <div class="settings-card-head">
+                    <span class="settings-card-icon" aria-hidden="true">🛡</span>
+                    <div>
+                        <h2>Admin access</h2>
+                        <p>Optional. Most students never need this.</p>
+                    </div>
+                </div>
+                <form asp-controller="Settings" asp-action="ApplyForAdmin" method="post" class="admin-request-form">
+                    @Html.AntiForgeryToken()
+                    <label for="admin-reason">Reason</label>
+                    <textarea id="admin-reason" name="reason" rows="2" required placeholder="Why do you need administrator access?"></textarea>
+                    <button type="submit" class="button secondary small">Submit request</button>
+                </form>
+            </article>
+}
+        </div>
+    </div>
+</div>
+@section Scripts {<script src="~/js/settings.js" asp-append-version="true"></script>}

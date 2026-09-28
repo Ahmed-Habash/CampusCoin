@@ -1,0 +1,100 @@
+@model SundayLetterCardViewModel
+@{
+    var sealedState = !Model.IsUnlocked;
+    var ready = Model.IsUnlocked && !Model.IsOpened;
+}
+<article class="panel sunday-letter-card" data-letter-tone="@Model.Tone" data-letter-state="@(sealedState ? "sealed" : ready ? "ready" : "opened")">
+    <header class="sunday-letter-top">
+        <div>
+            <span class="tiny-label">Sunday letter</span>
+            <h2>@(sealedState ? Model.Title : ready ? "Ready to open" : Model.Title)</h2>
+            <p class="sunday-letter-week">@Model.WeekLabel</p>
+        </div>
+        <span class="pill sunday-letter-pill">@Model.UnlockLabel</span>
+    </header>
+
+    @if (sealedState)
+    {
+        <div class="sunday-seal" aria-live="polite">
+            <div class="sunday-seal-wax" aria-hidden="true"><span>CC</span></div>
+            <div class="sunday-seal-copy">
+                <p>@Model.SealedHint</p>
+                <div class="sunday-seal-row">
+                    <div class="sunday-seal-meter" role="presentation">
+                        <span style="width:@Math.Clamp(100 - Model.DaysUntilUnlock * 14, 8, 100)%"></span>
+                    </div>
+                    <small>@(Model.DaysUntilUnlock == 1 ? "Tomorrow" : $"{Model.DaysUntilUnlock}d left")</small>
+                </div>
+            </div>
+        </div>
+    }
+    else if (ready)
+    {
+        <div class="sunday-ready">
+            <div class="sunday-ready-mark" aria-hidden="true">✉</div>
+            <div class="sunday-ready-copy">
+                <strong>@Model.Title</strong>
+                <p>@Model.SealedHint</p>
+                <form method="post" asp-controller="Dashboard" asp-action="OpenSundayLetter">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="letterId" value="@Model.LetterId" />
+                    <button type="submit" class="button small">Break the seal</button>
+                </form>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="sunday-opened">
+            <div class="sunday-letter-body">
+                @foreach (var para in (Model.Body ?? "").Split("\n\n", StringSplitOptions.RemoveEmptyEntries))
+                {
+                    <p>@para</p>
+                }
+            </div>
+            <div class="sunday-letter-actions">
+                @if (!Model.IsSaved)
+                {
+                    <form method="post" asp-controller="Dashboard" asp-action="SaveSundayLetter">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="letterId" value="@Model.LetterId" />
+                        <button type="submit" class="button secondary small">Save to Letter Box</button>
+                    </form>
+                }
+                else
+                {
+                    <span class="pill">In Letter Box</span>
+                }
+            </div>
+        </div>
+    }
+
+    @if (Model.LetterBox.Count > 0)
+    {
+        <details class="sunday-letterbox">
+            <summary>
+                <strong>Letter Box</strong>
+                <small>@Model.LetterBox.Count kept</small>
+            </summary>
+            <ul class="sunday-letterbox-list">
+                @foreach (var item in Model.LetterBox)
+                {
+                    <li>
+                        <details>
+                            <summary>
+                                <span>@item.Title</span>
+                                <small>@item.WeekLabel</small>
+                            </summary>
+                            <div class="sunday-letter-body is-archive">
+                                @foreach (var para in (item.Body ?? "").Split("\n\n", StringSplitOptions.RemoveEmptyEntries))
+                                {
+                                    <p>@para</p>
+                                }
+                            </div>
+                        </details>
+                    </li>
+                }
+            </ul>
+        </details>
+    }
+</article>

@@ -1,0 +1,279 @@
+/* Money Garden — living dashboard scene (extends legacy tree pieces) */
+.money-garden-card,
+.financial-tree-card{
+  position:relative;overflow:hidden;isolation:isolate;
+}
+.money-garden-pill,
+.financial-tree-pill{
+  background:color-mix(in srgb, var(--ok) 18%, var(--panel))!important;
+  color:var(--ok)!important;
+  border:1px solid color-mix(in srgb, var(--ok) 28%, var(--line));
+  font-weight:750;
+}
+
+.money-garden-stage,
+.financial-tree-stage{
+  position:relative;
+  height:248px;
+  margin:4px 0 14px;
+  border-radius:18px;
+  overflow:hidden;
+  border:1px solid color-mix(in srgb, var(--ok) 16%, var(--line));
+  background:linear-gradient(180deg,#9fd4ff 0%,#c8e7ff 38%,#e8f6ff 68%,#d7efc8 100%);
+}
+[data-theme=dark] .money-garden-stage,
+[data-theme=dark] .financial-tree-stage{
+  background:linear-gradient(180deg,#0b1a2e 0%,#102033 45%,#0f2418 100%);
+  border-color:rgba(121,242,199,.12);
+}
+.money-garden-stage.is-large{height:300px;margin:0 0 16px}
+
+.mg-sky{position:absolute;inset:0;background:
+  radial-gradient(circle at 78% 16%,rgba(255,255,255,.55),transparent 34%),
+  radial-gradient(circle at 18% 22%,rgba(255,255,255,.28),transparent 30%)}
+.mg-sun{
+  position:absolute;top:18px;right:28px;width:42px;height:42px;border-radius:50%;
+  background:radial-gradient(circle at 35% 35%,#fff7c2,#f5c84c 60%,#e8a317);
+  box-shadow:0 0 28px rgba(245,200,76,.45);
+  animation:mg-sun-pulse 5s ease-in-out infinite;
+}
+.mg-hills{
+  position:absolute;left:-10%;right:-10%;bottom:46px;height:70px;
+  background:
+    radial-gradient(ellipse 55% 90% at 22% 100%,#8fbf73 0%,transparent 70%),
+    radial-gradient(ellipse 60% 100% at 78% 100%,#7aaa62 0%,transparent 72%);
+  opacity:.85;
+}
+.mg-ground,
+.financial-tree-ground{
+  position:absolute;left:-8%;right:-8%;bottom:-34px;height:92px;border-radius:50%;
+  background:radial-gradient(ellipse at center,#5f8f45 0%,#3f6a30 55%,#2a4a22 78%,transparent 80%);
+}
+[data-theme=dark] .mg-ground,
+[data-theme=dark] .financial-tree-ground{
+  background:radial-gradient(ellipse at center,#163226 0%,#0d1a14 70%,transparent 72%);
+}
+.mg-grass{
+  position:absolute;bottom:38px;width:10px;height:18px;border-radius:40% 40% 10% 10%;
+  background:linear-gradient(180deg,#9ad46a,#4f8a38);opacity:.9;
+}
+.mg-grass-a{left:14%;box-shadow:16px 2px 0 #6ea84a,32px -1px 0 #88c25d,48px 3px 0 #5f9440}
+.mg-grass-b{right:16%;box-shadow:-14px 1px 0 #79b352,-28px 3px 0 #5f9440,-42px 0 0 #8ec861}
+
+.mg-bush{
+  position:absolute;bottom:52px;width:54px;height:28px;border-radius:50%;
+  background:radial-gradient(circle at 40% 40%,#7dce6a,#3f8f45 70%);
+  box-shadow:inset 0 -6px 0 rgba(0,0,0,.12);
+}
+.mg-bush-left{left:10%}
+.mg-bush-right{right:12%;width:46px;height:24px}
+
+.mg-flowerbed{
+  position:absolute;left:12%;right:12%;bottom:48px;height:28px;
+  display:flex;justify-content:space-between;align-items:flex-end;pointer-events:none;
+}
+.mg-flower{
+  width:14px;height:14px;border-radius:50%;
+  background:radial-gradient(circle at 35% 30%,#fff,#f472b6 45%,#db2777);
+  box-shadow:0 8px 0 -5px #3f7a32, 0 0 0 3px rgba(244,114,182,.15);
+  animation:mg-bloom .8s cubic-bezier(.2,.8,.2,1) both;
+  transform-origin:50% 100%;
+}
+.mg-flower.f-1{background:radial-gradient(circle at 35% 30%,#fff,#60a5fa 48%,#2563eb);animation-delay:.06s}
+.mg-flower.f-2{background:radial-gradient(circle at 35% 30%,#fff,#fbbf24 48%,#d97706);animation-delay:.12s}
+.mg-flower.f-3{background:radial-gradient(circle at 35% 30%,#fff,#a78bfa 48%,#7c3aed);animation-delay:.18s}
+.mg-flower.f-4{background:radial-gradient(circle at 35% 30%,#fff,#34d399 48%,#059669);animation-delay:.24s}
+.mg-flower.f-5{background:radial-gradient(circle at 35% 30%,#fff,#fb7185 48%,#e11d48);animation-delay:.3s}
+.mg-flower.is-rare{
+  width:18px;height:18px;
+  background:radial-gradient(circle at 35% 30%,#fff7c2,#f59e0b 40%,#db2777 75%);
+  box-shadow:0 10px 0 -6px #3f7a32,0 0 16px rgba(245,158,11,.55);
+}
+.mg-flower.is-wilt{
+  filter:saturate(.35) brightness(.85);
+  transform:translateY(4px) rotate(18deg) scale(.85);
+  opacity:.55;animation:none;
+}
+
+.mg-tree,
+.financial-tree-plant{
+  position:absolute;left:50%;bottom:40px;width:120px;height:var(--tree-growth,50%);max-height:86%;
+  transform:translateX(-50%);transform-origin:50% 100%;
+  transition:height .85s cubic-bezier(.2,.8,.2,1);
+}
+.financial-tree-trunk{
+  position:absolute;left:50%;bottom:0;width:14px;height:42%;margin-left:-7px;
+  border-radius:10px 10px 4px 4px;
+  background:linear-gradient(180deg,#8b5a2b,#5c3a18);
+  box-shadow:inset -3px 0 0 rgba(0,0,0,.18);
+}
+.financial-tree-canopy{
+  position:absolute;border-radius:50%;
+  background:radial-gradient(circle at 35% 30%,#9af7d5,#2f9f7a 58%,#1d6b52 100%);
+  box-shadow:0 10px 24px rgba(0,0,0,.18);
+  transition:transform .7s ease,opacity .7s ease,filter .7s ease;
+}
+.canopy-main{width:78px;height:62px;left:50%;bottom:34%;margin-left:-39px}
+.canopy-left{width:48px;height:42px;left:8%;bottom:42%}
+.canopy-right{width:52px;height:44px;right:6%;bottom:40%}
+.financial-tree-leaf{
+  position:absolute;width:12px;height:18px;border-radius:60% 10% 60% 10%;
+  background:#79f2c7;opacity:.9;transform-origin:center bottom;
+}
+.leaf-a{left:18%;bottom:58%;transform:rotate(-25deg)}
+.leaf-b{right:16%;bottom:62%;transform:rotate(20deg)}
+.leaf-c{left:46%;bottom:72%;transform:rotate(8deg)}
+.financial-tree-bloom{
+  position:absolute;width:10px;height:10px;border-radius:50%;
+  background:#f4d35e;box-shadow:0 0 0 3px rgba(244,211,94,.18);
+  opacity:0;transform:scale(.4);
+}
+.bloom-a{left:28%;top:18%}
+.bloom-b{right:24%;top:28%}
+.bloom-c{left:48%;top:8%}
+
+.mg-butterfly{
+  position:absolute;width:12px;height:8px;border-radius:50% 50% 50% 50%;
+  background:linear-gradient(90deg,#f9a8d4,#c084fc);opacity:.95;
+  filter:drop-shadow(0 2px 2px rgba(0,0,0,.15));
+  animation:mg-flutter 4.5s ease-in-out infinite;
+}
+.mg-butterfly.b-a{left:22%;top:28%}
+.mg-butterfly.b-b{right:20%;top:36%;animation-delay:1.2s;background:linear-gradient(90deg,#93c5fd,#a78bfa)}
+.mg-bird{
+  position:absolute;top:22%;right:30%;width:16px;height:8px;border-radius:40% 60% 50% 40%;
+  background:#334155;box-shadow:6px -2px 0 -2px #64748b;
+  animation:mg-bird 7s ease-in-out infinite;
+}
+.mg-fox{
+  position:absolute;bottom:44px;left:22%;width:22px;height:12px;border-radius:8px 14px 8px 8px;
+  background:linear-gradient(90deg,#fb923c,#ea580c);
+  box-shadow:14px 2px 0 -4px #c2410c, -2px -6px 0 -5px #fb923c;
+}
+.mg-particle{
+  position:absolute;width:5px;height:5px;border-radius:50%;
+  background:rgba(255,255,255,.85);box-shadow:0 0 10px rgba(255,247,194,.8);
+  animation:mg-float 5s ease-in-out infinite;
+}
+.mg-particle.p1{left:30%;bottom:58%}
+.mg-particle.p2{left:58%;bottom:66%;animation-delay:.8s}
+.mg-particle.p3{left:44%;bottom:74%;animation-delay:1.4s}
+.mg-particle.p4{left:70%;bottom:52%;animation-delay:2s}
+
+/* States */
+.money-garden-card[data-garden-state=wilted] .financial-tree-canopy,
+.financial-tree-card[data-tree-state=wilted] .financial-tree-canopy{
+  background:radial-gradient(circle at 35% 30%,#b7a58a,#6d5b45 60%,#43362a 100%);
+  filter:saturate(.55) brightness(.85);
+}
+.money-garden-card[data-garden-state=wilted] .financial-tree-leaf{opacity:.15;transform:translateY(10px) rotate(40deg)}
+.money-garden-card[data-garden-state=wilted] .mg-sky{filter:saturate(.7) brightness(.92)}
+.money-garden-card[data-garden-state=stressed] .financial-tree-canopy{
+  background:radial-gradient(circle at 35% 30%,#c6d48a,#7f9a3f 58%,#516328 100%);filter:saturate(.75);
+}
+.money-garden-card[data-garden-state=stressed] .leaf-c{opacity:.25}
+.money-garden-card[data-garden-state=steady] .financial-tree-canopy{
+  background:radial-gradient(circle at 35% 30%,#8fe8c4,#3aa882 58%,#216853 100%);
+}
+.money-garden-card[data-garden-state=healthy] .financial-tree-canopy{
+  background:radial-gradient(circle at 35% 30%,#a8f6d8,#35c295 55%,#1d7a5b 100%);
+}
+.money-garden-card[data-garden-state=healthy] .financial-tree-leaf{animation:tree-leaf-sway 3.2s ease-in-out infinite}
+.money-garden-card[data-garden-state=flowering] .financial-tree-canopy{
+  background:radial-gradient(circle at 35% 30%,#b9ffe4,#43d6a4 52%,#1f8f69 100%);
+}
+.money-garden-card[data-garden-state=flowering] .financial-tree-bloom{
+  opacity:1;transform:scale(1);animation:tree-bloom-pop .7s cubic-bezier(.2,.8,.2,1) both;
+}
+.money-garden-card[data-garden-state=flowering] .bloom-b{animation-delay:.12s}
+.money-garden-card[data-garden-state=flowering] .bloom-c{animation-delay:.22s}
+.money-garden-card[data-garden-state=flowering] .financial-tree-leaf{animation:tree-leaf-sway 2.6s ease-in-out infinite}
+
+.money-garden-card[data-garden-motion=grow] .mg-tree{animation:tree-grow .9s cubic-bezier(.2,.8,.2,1)}
+.money-garden-card[data-garden-motion=wilt] .mg-tree{animation:tree-wilt .9s ease}
+.money-garden-card[data-garden-motion=wilt] .financial-tree-leaf{animation:tree-leaf-fall .95s ease forwards}
+
+.money-garden-meta{display:grid;gap:10px}
+.money-garden-health-top{display:flex;align-items:baseline;justify-content:space-between;gap:10px}
+.money-garden-health strong{
+  font-family:var(--font-display);font-size:1.75rem;letter-spacing:-.04em;line-height:1;color:var(--ink);
+}
+.money-garden-health strong span{font-size:13px;color:var(--muted);font-weight:650;margin-left:1px}
+.money-garden-health-top small{font-size:11px;color:var(--muted);font-weight:650;text-transform:uppercase;letter-spacing:.06em}
+.money-garden-bar{
+  height:8px;border-radius:999px;background:var(--paper-2);overflow:hidden;border:1px solid var(--line);
+}
+.money-garden-bar > span{
+  display:block;height:100%;border-radius:inherit;
+  background:linear-gradient(90deg,var(--ok),#34d399);
+  box-shadow:0 0 12px color-mix(in srgb, var(--ok) 35%, transparent);
+}
+.money-garden-sub{display:block;margin-top:2px;font-size:10.5px;color:var(--muted)}
+.money-garden-soft{
+  margin:0;font-size:13px;line-height:1.5;color:var(--ink-soft);
+  padding:10px 12px;border-radius:12px;
+  background:color-mix(in srgb, var(--ok) 8%, var(--panel));
+  border:1px solid color-mix(in srgb, var(--ok) 18%, var(--line));
+}
+.money-garden-open{justify-self:start;font-size:12px;font-weight:750;border:0;background:none;padding:0;cursor:pointer;color:var(--accent-deep)}
+.money-garden-open:hover{color:var(--accent)}
+
+.money-garden-modal .money-garden-dialog{
+  width:min(560px,94vw);max-height:90vh;overflow:auto;
+  background:var(--panel);border-radius:18px;border:1px solid var(--line);
+  box-shadow:var(--shadow-lg);padding:18px 18px 16px;
+}
+body.modal-open{overflow:hidden}
+.money-garden-dialog-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:12px}
+.money-garden-dialog-head h3{margin:4px 0 0;font-family:var(--font-display);font-size:1.35rem;letter-spacing:-.03em}
+.money-garden-detail-grid{
+  display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:12px;
+}
+.money-garden-detail-grid > div{
+  padding:10px;border-radius:12px;background:var(--paper);border:1px solid var(--line);
+}
+.money-garden-detail-grid small{display:block;font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px}
+.money-garden-detail-grid strong{font-family:var(--font-display);font-size:1rem;color:var(--ink)}
+.money-garden-unlocks{display:flex;flex-wrap:wrap;gap:6px;list-style:none;margin:12px 0 0;padding:0}
+.money-garden-unlocks li{
+  padding:4px 9px;border-radius:999px;font-size:11px;font-weight:700;text-transform:capitalize;
+  background:color-mix(in srgb, var(--accent) 10%, var(--panel));
+  border:1px solid color-mix(in srgb, var(--accent) 22%, var(--line));
+  color:var(--accent-deep);
+}
+
+@keyframes mg-sun-pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.06)}}
+@keyframes mg-bloom{from{opacity:0;transform:translateY(8px) scale(.4)}to{opacity:1;transform:none}}
+@keyframes mg-flutter{
+  0%{transform:translate(0,0) rotate(0)}
+  25%{transform:translate(18px,-10px) rotate(8deg)}
+  50%{transform:translate(36px,4px) rotate(-4deg)}
+  75%{transform:translate(12px,-14px) rotate(6deg)}
+  100%{transform:translate(0,0) rotate(0)}
+}
+@keyframes mg-bird{
+  0%,100%{transform:translateX(0)}
+  50%{transform:translateX(-28px)}
+}
+@keyframes mg-float{
+  0%,100%{transform:translateY(0);opacity:.35}
+  50%{transform:translateY(-16px);opacity:1}
+}
+@keyframes tree-leaf-sway{0%,100%{transform:rotate(-8deg)}50%{transform:rotate(10deg)}}
+@keyframes tree-bloom-pop{from{opacity:0;transform:scale(.3)}to{opacity:1;transform:scale(1)}}
+@keyframes tree-grow{0%{transform:translateX(-50%) scale(.92)}60%{transform:translateX(-50%) scale(1.04)}100%{transform:translateX(-50%) scale(1)}}
+@keyframes tree-wilt{0%{transform:translateX(-50%) rotate(0)}100%{transform:translateX(-50%) rotate(-3deg)}}
+@keyframes tree-leaf-fall{to{opacity:0;transform:translateY(18px) rotate(50deg)}}
+
+@media (prefers-reduced-motion:reduce){
+  .mg-sun,.mg-butterfly,.mg-bird,.mg-particle,.mg-flower,
+  .financial-tree-plant,.financial-tree-canopy,.financial-tree-leaf,.financial-tree-bloom{animation:none!important;transition:none!important}
+}
+@media (max-width:900px){
+  .money-garden-stage,.financial-tree-stage{height:220px}
+  .money-garden-detail-grid{grid-template-columns:1fr 1fr}
+}
+@media (max-width:560px){
+  .money-garden-stage,.financial-tree-stage{height:200px}
+  .money-garden-health strong{font-size:1.45rem}
+}

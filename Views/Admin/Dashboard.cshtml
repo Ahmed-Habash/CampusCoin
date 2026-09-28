@@ -1,0 +1,108 @@
+@model AdminDashboardViewModel
+@{
+    ViewData["Title"] = "Admin Dashboard";
+    ViewData["HeaderEyebrow"] = "Campus Coin governance";
+    ViewData["HeaderTitle"] = "Admin dashboard";
+    ViewData["HeaderLead"] = "System-wide health, user counts, transaction flow, and platform activity.";
+}
+<partial name="_PageHeader" />
+
+<section class="stat-grid admin-stat-grid" style="margin-bottom: 24px;">
+    <article class="stat-card">
+        <div class="stat-label">Total Users</div>
+        <strong>@Model.TotalUsers</strong>
+        <span class="stat-caption">Registered student & admin accounts</span>
+    </article>
+    <article class="stat-card stat-card-light">
+        <div class="stat-label">Active Users <span class="stat-icon">✓</span></div>
+        <strong>@Model.ActiveUsers</strong>
+        <span class="stat-caption">Accounts in good standing</span>
+    </article>
+    <article class="stat-card stat-card-light">
+        <div class="stat-label">Disabled Users <span class="stat-icon peach">✕</span></div>
+        <strong>@Model.DisabledUsers</strong>
+        <span class="stat-caption">Accounts locked by admin</span>
+    </article>
+    <article class="stat-card">
+        <div class="stat-label">Total Transactions</div>
+        <strong>@Model.TotalTransactions</strong>
+        <span class="stat-caption">System-wide logged transactions</span>
+    </article>
+    <article class="stat-card stat-card-light">
+        <div class="stat-label">Income Entries <span class="stat-icon">↓</span></div>
+        <strong>@Model.TotalIncomeTransactions</strong>
+        <span class="stat-caption">All student income logs</span>
+    </article>
+    <article class="stat-card stat-card-light">
+        <div class="stat-label">Expense Entries <span class="stat-icon peach">↑</span></div>
+        <strong>@Model.TotalExpenseTransactions</strong>
+        <span class="stat-caption">All student expense logs</span>
+    </article>
+</section>
+
+<section class="chart-grid admin-stats-pair" style="margin-bottom: 28px;">
+    <article class="panel admin-stats-panel">
+        <div class="panel-heading">
+            <div>
+                <h2>Most Used Expense Categories</h2>
+                <p>Default platform categories only (personal categories stay private)</p>
+            </div>
+        </div>
+        @if (Model.CategoryLabels.Length > 0)
+        {
+            <div class="admin-category-bars">
+                @for (int i = 0; i < Model.CategoryLabels.Length; i++)
+                {
+                    var label = Model.CategoryLabels[i];
+                    var count = Model.CategoryCounts[i];
+                    var pct = Model.CategoryPercentages[i];
+                    <div class="admin-category-row">
+                        <div class="admin-category-row-meta">
+                            <span>@label</span>
+                            <span>@pct% <small>(@count logs)</small></span>
+                        </div>
+                        <div class="admin-category-track">
+                            <div class="admin-category-fill" style="width: @pct%;"></div>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+        else
+        {
+            <div class="empty-state">
+                <h3>No Expense Logs Yet</h3>
+                <p>When students start logging expenses, category distribution will appear here.</p>
+            </div>
+        }
+    </article>
+
+    <article class="panel admin-stats-panel admin-activity-panel">
+        <div class="panel-heading">
+            <div>
+                <h2>Recent Administrative Actions</h2>
+                <p>All admins — system audit trail</p>
+            </div>
+            <a class="text-link" asp-controller="Admin" asp-action="Statistics">Full statistics ↗</a>
+        </div>
+        @if (Model.RecentLogs.Count == 0)
+        {
+            <p class="muted">No administrative actions logged yet.</p>
+        }
+        else
+        {
+            <div class="admin-activity-list">
+                @foreach (var log in Model.RecentLogs)
+                {
+                    <div class="admin-activity-item">
+                        <div>
+                            <strong>@log.AdminEmail</strong>
+                            <span>@log.Action: <em>@log.Target</em></span>
+                        </div>
+                        <small>@log.Timestamp.ToLocalTime().ToString("MMM dd, HH:mm")</small>
+                    </div>
+                }
+            </div>
+        }
+    </article>
+</section>

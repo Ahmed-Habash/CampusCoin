@@ -1,0 +1,110 @@
+@model List<Category>
+@{
+    ViewData["Title"] = "System Default Categories";
+    var incomeCats = Model.Where(c => c.Type == CategoryType.Income).ToList();
+    var expenseCats = Model.Where(c => c.Type == CategoryType.Expense).ToList();
+}
+
+<div class="page-heading">
+    <div>
+        <span class="eyebrow">SYSTEM CATEGORIES</span>
+        <h1>Default Categories</h1>
+        <p>Manage system-wide default income and expense categories available to all student accounts.</p>
+    </div>
+</div>
+
+<div class="panel" style="margin-bottom: 24px;">
+    <h3>Add System-Wide Default Category</h3>
+    <form method="post" asp-controller="Admin" asp-action="CreateCategory" style="display: flex; gap: 12px; align-items: flex-end; flex-wrap: wrap; margin-top: 14px;">
+        @Html.AntiForgeryToken()
+        <div style="flex: 1; min-width: 220px;">
+            <label for="Name" style="margin-top:0;">Category Name</label>
+            <input type="text" id="Name" name="Name" placeholder="e.g. Lab Supplies, Tutoring..." required />
+        </div>
+        <div style="width: 180px;">
+            <label for="Type" style="margin-top:0;">Category Type</label>
+            <select id="Type" name="Type">
+                <option value="Expense">Expense</option>
+                <option value="Income">Income</option>
+            </select>
+        </div>
+        <button type="submit" class="button">Create Default Category</button>
+    </form>
+</div>
+
+<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+    <article class="panel">
+        <h2>Expense Categories</h2>
+        <p class="muted">Default expense buckets for students</p>
+        <div style="display: grid; gap: 10px; margin-top: 16px;">
+            @foreach (var c in expenseCats)
+            {
+                <div data-ajax-item style="display: flex; justify-content: space-between; align-items: center; padding: 12px 14px; border: 1px solid var(--line); border-radius: 12px; background: var(--panel);">
+                    <div>
+                        <strong>@c.Name</strong>
+                        @if (c.IsArchived) { <span class="pill" data-archived-pill style="margin-left: 6px; background: var(--soft); color: var(--muted);">Archived</span> }
+                    </div>
+                    @if (!c.IsArchived)
+                    {
+                        <form method="post" asp-controller="Admin" asp-action="DeleteCategory" asp-route-id="@c.Id" data-admin-ajax data-confirm="Remove category '@c.Name'?">
+                            @Html.AntiForgeryToken()
+                            <button type="submit" class="button small secondary" style="min-height: 28px; padding: 2px 8px; font-size: 10px;">Remove</button>
+                        </form>
+                    }
+                </div>
+            }
+        </div>
+    </article>
+
+    <article class="panel">
+        <h2>Income Categories</h2>
+        <p class="muted">Default income buckets for students</p>
+        <div style="display: grid; gap: 10px; margin-top: 16px;">
+            @foreach (var c in incomeCats)
+            {
+                <div data-ajax-item style="display: flex; justify-content: space-between; align-items: center; padding: 12px 14px; border: 1px solid var(--line); border-radius: 12px; background: var(--panel);">
+                    <div>
+                        <strong>@c.Name</strong>
+                        @if (c.IsArchived) { <span class="pill" data-archived-pill style="margin-left: 6px; background: var(--soft); color: var(--muted);">Archived</span> }
+                    </div>
+                    @if (!c.IsArchived)
+                    {
+                        <form method="post" asp-controller="Admin" asp-action="DeleteCategory" asp-route-id="@c.Id" data-admin-ajax data-confirm="Remove category '@c.Name'?">
+                            @Html.AntiForgeryToken()
+                            <button type="submit" class="button small secondary" style="min-height: 28px; padding: 2px 8px; font-size: 10px;">Remove</button>
+                        </form>
+                    }
+                </div>
+            }
+        </div>
+    </article>
+</div>
+
+@section Scripts {
+<script>
+document.addEventListener('admin:ajax-success', (e) => {
+    const form = e.target;
+    if (!(form instanceof HTMLFormElement)) return;
+    const item = form.closest('[data-ajax-item]');
+    if (!item) return;
+    if (e.detail?.data?.archived) {
+        form.remove();
+        const title = item.querySelector('div');
+        if (title && !item.querySelector('[data-archived-pill]')) {
+            const pill = document.createElement('span');
+            pill.className = 'pill';
+            pill.dataset.archivedPill = '';
+            pill.style.cssText = 'margin-left:6px;background:var(--soft);color:var(--muted);';
+            pill.textContent = 'Archived';
+            title.append(pill);
+        }
+        return;
+    }
+    if (e.detail?.data?.deleted) {
+        item.style.transition = 'opacity .2s ease';
+        item.style.opacity = '0';
+        setTimeout(() => item.remove(), 200);
+    }
+});
+</script>
+}

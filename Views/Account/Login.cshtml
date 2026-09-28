@@ -1,0 +1,81 @@
+@model LoginForm
+@{
+    ViewData["Title"] = "Log in";
+}
+<link rel="stylesheet" href="~/css/auth.css" asp-append-version="true" />
+
+<div class="auth-stage" data-auth-stage>
+    <div class="auth-bg" aria-hidden="true">
+        <span class="auth-wash"></span>
+        <span class="auth-aurora"></span>
+        <span class="auth-grid"></span>
+        <span class="auth-orb auth-orb-a"></span>
+        <span class="auth-orb auth-orb-b"></span>
+    </div>
+
+    <div class="auth-shell">
+        <section class="auth-brand" aria-label="Campus Coin">
+            <div class="auth-brand-inner">
+                <div class="auth-wordmark" aria-hidden="true">
+                    <span class="brand-icon">c</span>
+                    <span>campus<span class="brand-light">coin</span></span>
+                </div>
+                <p class="auth-kicker">Student money, clarified</p>
+                <h1 class="auth-headline">
+                    <span class="auth-line"><span>Welcome back.</span></span>
+                    <span class="auth-line auth-line-soft"><span>Your next check-in starts here.</span></span>
+                </h1>
+                <p class="auth-lede">Pick up your balance, budgets, and goals — same calm workspace, no bank jargon.</p>
+                <ul class="auth-points">
+                    <li>Safe-to-spend pace for the rest of the month</li>
+                    <li>Budgets and goals in one student-friendly view</li>
+                    <li>Ask Coin when you need a quick nudge</li>
+                </ul>
+            </div>
+            <div class="auth-figure" aria-hidden="true">
+                <div class="auth-device">
+                    <div class="auth-device-chrome"><em>Overview</em></div>
+                    <div class="auth-device-body">
+                        <small>Safe to spend</small>
+                        <strong>$18<span>/day</span></strong>
+                        <i><b></b></i>
+                        <div class="auth-device-row"><span>Balance</span><em>$785</em></div>
+                        <div class="auth-device-row is-in"><span>This week</span><em>+$120</em></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="auth-panel" aria-labelledby="auth-form-title">
+            <header class="auth-panel-head">
+                <span class="eyebrow">LOG IN</span>
+                <h2 id="auth-form-title">Continue to Campus Coin</h2>
+                <p>Use the email you registered with.</p>
+            </header>
+
+            <form method="post" class="auth-form" novalidate>
+                <input asp-for="ReturnUrl" type="hidden" />
+                <div asp-validation-summary="All" class="validation" role="alert"></div>
+
+                <div class="auth-field">
+                    <label asp-for="Email">Email</label>
+                    <input asp-for="Email" autocomplete="username" inputmode="email" placeholder="you@university.edu" autofocus />
+                </div>
+
+                <div class="auth-field">
+                    <label asp-for="Password">Password</label>
+                    <partial name="_PasswordField" model='@("Password")' />
+                </div>
+
+                <label class="checkbox auth-remember">
+                    <input asp-for="RememberMe" />
+                    <span>Keep me signed in on this device</span>
+                </label>
+
+                <button class="button full auth-submit" type="submit">Log in</button>
+            </form>
+
+            <p class="auth-switch">New here? <a asp-action="Register">Create a free account</a></p>
+        </section>
+    </div>
+</div>

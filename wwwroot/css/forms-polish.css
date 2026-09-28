@@ -1,0 +1,87 @@
+/* Shared form / transaction edit polish */
+
+.tx-form-panel{
+  position:relative;
+  max-width:640px;
+  padding:28px 28px 22px!important;
+  border:1px solid var(--line);
+  box-shadow:var(--shadow);
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--panel) 92%, var(--accent-soft)), var(--panel));
+}
+.tx-field{margin:0}
+.tx-field label{
+  display:block;
+  margin:16px 0 7px;
+  font-size:12.5px;
+  font-weight:700;
+  color:var(--ink-soft);
+}
+.tx-field:first-of-type label,
+.tx-form > .tx-field:first-of-type label{margin-top:0}
+.tx-form-grid{margin-top:4px}
+.tx-form-panel input:not([type=checkbox]),
+.tx-form-panel select{
+  min-height:46px;
+  border-radius:12px;
+  border:1px solid var(--line-strong);
+  background:color-mix(in srgb, var(--paper) 50%, var(--panel));
+  padding:11px 14px;
+  transition:border-color .18s ease, box-shadow .18s ease, background .18s ease;
+}
+.tx-form-panel input:focus,
+.tx-form-panel select:focus{
+  outline:none;
+  border-color:var(--accent);
+  background:var(--panel);
+  box-shadow:0 0 0 4px color-mix(in srgb, var(--accent) 16%, transparent);
+}
+
+.tx-form-footer{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  flex-wrap:wrap;
+  margin-top:26px;
+  padding-top:18px;
+  border-top:1px solid var(--line);
+}
+.tx-form-footer-primary{
+  display:flex;
+  gap:10px;
+  flex-wrap:wrap;
+  margin-left:auto;
+}
+.tx-delete-form{display:inline;margin:0}
+.tx-delete-form .button.danger{
+  min-height:42px;
+}
+
+.fy-tx-message{
+  max-width:640px;
+  margin-bottom:16px;
+  padding:18px 20px;
+  border:1px solid color-mix(in srgb, var(--accent) 28%, var(--line));
+  background:
+    linear-gradient(135deg, color-mix(in srgb, var(--accent-soft) 70%, var(--panel)), var(--panel));
+}
+.fy-tx-message p{
+  margin:8px 0 0;
+  font-size:14px;
+  line-height:1.55;
+  color:var(--ink);
+}
+.fy-tx-message .muted{
+  display:block;
+  margin-top:8px;
+  font-size:11.5px;
+}
+
+@media (max-width:620px){
+  .tx-form-panel{padding:20px 16px 16px!important}
+  .tx-form-footer{align-items:stretch}
+  .tx-form-footer-primary{width:100%;margin-left:0}
+  .tx-form-footer-primary .button,
+  .tx-delete-form .button{flex:1}
+}
