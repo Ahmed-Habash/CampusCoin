@@ -3,6 +3,7 @@ using CampusCoin.Infrastructure;
 using CampusCoin.Models;
 using CampusCoin.Services;
 using Microsoft.AspNetCore.DataProtection;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
@@ -16,6 +17,16 @@ var assemblyDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Lo
 var detectedRoot = Path.GetFullPath(Path.Combine(assemblyDirectory, "..", "..", ".."));
 var contentRoot = Directory.Exists(Path.Combine(launchRoot, "wwwroot")) ? launchRoot : detectedRoot;
 var builder = WebApplication.CreateBuilder(new WebApplicationOptions { Args = args, ContentRootPath = contentRoot });
+var listenPort = Environment.GetEnvironmentVariable("PORT");
+if (string.IsNullOrWhiteSpace(listenPort)) listenPort = "10000";
+if (!builder.Environment.IsDevelopment() || !string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("PORT")))
+    builder.WebHost.UseUrls($"http://0.0.0.0:{listenPort}");
+builder.Services.Configure<ForwardedHeadersOptions>(options =>
+{
+    options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+    options.KnownNetworks.Clear();
+    options.KnownProxies.Clear();
+});
 builder.Logging.ClearProviders();
 builder.Logging.AddConsole();
 builder.Services.AddControllersWithViews(o =>
@@ -24,8 +35,10 @@ builder.Services.AddControllersWithViews(o =>
     o.Filters.Add(new SoftAntiforgeryResultFilter());
     o.Filters.Add(new SeeOtherRedirectFilter());
 });
+var dataProtectionKeysPath = Path.Combine(builder.Environment.ContentRootPath, ".keys");
+Directory.CreateDirectory(dataProtectionKeysPath);
 builder.Services.AddDataProtection().SetApplicationName("CampusCoin")
-    .PersistKeysToFileSystem(new DirectoryInfo(Path.Combine(builder.Environment.ContentRootPath, ".keys")));
+    .PersistKeysToFileSystem(new DirectoryInfo(dataProtectionKeysPath));
 // Always pin SQLite to ContentRoot so cwd/login restarts cannot open a different campuscoin.db
 var databasePath = Path.Combine(builder.Environment.ContentRootPath, "campuscoin.db");
 var connectionString = $"Data Source={databasePath};Foreign Keys=True";
@@ -81,16 +94,37 @@ builder.Services.AddHttpContextAccessor();
 builder.Services.AddHttpClient("OpenAI", client => client.Timeout = TimeSpan.FromSeconds(18));
 builder.Services.AddHttpClient("Gemini", client => client.Timeout = TimeSpan.FromSeconds(18));
 var app = builder.Build();
-if (!app.Environment.IsDevelopment()) { app.UseExceptionHandler("/Home/Error"); app.UseHsts(); app.UseHttpsRedirection(); }
+// Render terminates TLS at the proxy and forwards HTTP to the container.
+// Apply forwarded headers before any middleware that reads scheme or client IP.
+app.UseForwardedHeaders();
+if (!app.Environment.IsDevelopment())
+{
+    app.UseExceptionHandler("/Home/Error");
+    app.UseHsts();
+    // Do not call UseHttpsRedirection: the process listens on HTTP only.
+    // With X-Forwarded-Proto, Request.IsHttps is still true for public HTTPS traffic.
+}
 app.UseStaticFiles();
 app.UseRouting();
 app.UseAuthentication();
 app.UseAuthorization();
 app.Use(async (context, next) =>
 {
-    await context.RequestServices.GetRequiredService<CurrencyService>().InitializeAsync(context.RequestAborted);
+    if (!context.Request.Path.StartsWithSegments("/health"))
+    {
+        try
+        {
+            await context.RequestServices.GetRequiredService<CurrencyService>().InitializeAsync(context.RequestAborted);
+        }
+        catch (Exception ex)
+        {
+            app.Logger.LogWarning(ex, "CurrencyService.InitializeAsync failed; continuing with defaults.");
+        }
+    }
     await next();
 });
+try
+{
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -716,7 +750,16 @@ using (var scope = app.Services.CreateScope())
 
     await SeedData.InitializeAsync(scope.ServiceProvider, app.Environment.IsDevelopment() && app.Configuration.GetValue<bool>("SeedDemo"));
 }
-app.MapControllerRoute("default", "{controller=Home}/{action=Index}/{id?}");
+}
+catch (Exception ex)
+{
+    app.Logger.LogError(ex, "Database startup/migration failed.");
+    throw;
+}
+app.MapGet("/health", () => Results.Ok("CampusCoin is running"));
+app.MapControllerRoute(
+    name: "default",
+    pattern: "{controller=Home}/{action=Index}/{id?}");
 app.Run();
 public partial class Program { }
 

@@ -24,33 +24,46 @@ public sealed class CurrencyService(ApplicationDbContext db, IHttpContextAccesso
 
     public async Task InitializeAsync(CancellationToken cancellationToken = default)
     {
-        var http = accessor.HttpContext;
-        var userId = http?.User.FindFirstValue(ClaimTypes.NameIdentifier);
-        var isAdmin = http?.User.IsInRole("Administrator") == true;
-
-        string? selected = null;
-        string adminMode = "Fixed";
-        if (!string.IsNullOrWhiteSpace(userId))
+        try
         {
-            var row = await db.UserSettings.AsNoTracking()
-                .Where(x => x.UserId == userId)
-                .Select(x => new { x.CurrencyCode, x.AdminCurrencyMode })
-                .SingleOrDefaultAsync(cancellationToken);
-            selected = row?.CurrencyCode;
-            adminMode = string.Equals(row?.AdminCurrencyMode, "PerUser", StringComparison.OrdinalIgnoreCase) ? "PerUser" : "Fixed";
+            var http = accessor.HttpContext;
+            var userId = http?.User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var isAdmin = http?.User.IsInRole("Administrator") == true;
+
+            string? selected = null;
+            string adminMode = "Fixed";
+            if (!string.IsNullOrWhiteSpace(userId))
+            {
+                var row = await db.UserSettings.AsNoTracking()
+                    .Where(x => x.UserId == userId)
+                    .Select(x => new { x.CurrencyCode, x.AdminCurrencyMode })
+                    .SingleOrDefaultAsync(cancellationToken);
+                selected = row?.CurrencyCode;
+                adminMode = string.Equals(row?.AdminCurrencyMode, "PerUser", StringComparison.OrdinalIgnoreCase) ? "PerUser" : "Fixed";
+            }
+
+            Code = selected is null or "Auto" ? InferFromRequest(http) : Normalize(selected);
+            _adminMode = isAdmin ? adminMode : "Fixed";
+            _userCodes = new Dictionary<string, string>(StringComparer.Ordinal);
+
+            if (_adminMode == "PerUser")
+            {
+                var rows = await db.UserSettings.AsNoTracking()
+                    .Select(x => new { x.UserId, x.CurrencyCode })
+                    .ToListAsync(cancellationToken);
+                foreach (var r in rows)
+                    _userCodes[r.UserId] = r.CurrencyCode;
+            }
         }
-
-        Code = selected is null or "Auto" ? InferFromRequest(http) : Normalize(selected);
-        _adminMode = isAdmin ? adminMode : "Fixed";
-        _userCodes = new Dictionary<string, string>(StringComparer.Ordinal);
-
-        if (_adminMode == "PerUser")
+        catch (OperationCanceledException)
         {
-            var rows = await db.UserSettings.AsNoTracking()
-                .Select(x => new { x.UserId, x.CurrencyCode })
-                .ToListAsync(cancellationToken);
-            foreach (var r in rows)
-                _userCodes[r.UserId] = r.CurrencyCode;
+            throw;
+        }
+        catch
+        {
+            Code = "USD";
+            _adminMode = "Fixed";
+            _userCodes = new Dictionary<string, string>(StringComparer.Ordinal);
         }
     }
 
